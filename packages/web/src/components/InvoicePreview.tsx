@@ -148,7 +148,7 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
         <div>
           <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Payment Terms: </span>
           <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
-            {invoice.paymentTerms.replace('_', ' ')}
+            {invoice.paymentTerms.replace(/_/g, ' ')}
           </span>
         </div>
         <span className={`status-badge ${invoice.status.toLowerCase()}`}>
