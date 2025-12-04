@@ -148,7 +148,8 @@ export async function seedDatabase(): Promise<void> {
 }
 
 // Run if executed directly
-if (import.meta.url.endsWith(process.argv[1]?.replace(/^file:\/\//, '') || '')) {
+const currentFilePath = new URL(import.meta.url).pathname;
+if (process.argv[1] === currentFilePath) {
   seedDatabase()
     .then(() => prisma.$disconnect())
     .catch(async (e) => {

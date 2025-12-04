@@ -141,7 +141,9 @@ export async function deleteInvoice(id: string): Promise<boolean> {
       where: { id },
     });
     return true;
-  } catch {
+  } catch (error) {
+    // Invoice not found or cannot be deleted (e.g., foreign key constraint)
+    console.error('Failed to delete invoice:', error);
     return false;
   }
 }

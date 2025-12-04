@@ -27,8 +27,16 @@ const TrashIcon = () => (
   </svg>
 );
 
+/**
+ * Generate a temporary ID for local state management
+ * Uses crypto.randomUUID with fallback for older browsers
+ */
 function generateTempId(): string {
-  return `temp-${crypto.randomUUID()}`;
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return `temp-${crypto.randomUUID()}`;
+  }
+  // Fallback for environments without crypto.randomUUID
+  return `temp-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
 const emptyLineItem = (): LineItem => ({

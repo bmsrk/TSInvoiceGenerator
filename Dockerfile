@@ -45,10 +45,10 @@ COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/packages/api/dist ./packages/api/dist
 COPY --from=builder /app/packages/api/prisma ./packages/api/prisma
 COPY --from=builder /app/packages/web/dist ./packages/web/dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-# Copy the API service files needed for Prisma
-COPY --from=builder /app/packages/api/prisma.config.ts ./packages/api/
+# Generate Prisma client in production
+WORKDIR /app/packages/api
+RUN npx prisma generate
 
 # Set environment variables
 ENV NODE_ENV=production

@@ -24,6 +24,7 @@ export function fromCents(cents: number): number {
 
 /**
  * Safely multiply two decimal amounts (e.g., quantity * rate)
+ * Note: For very large amounts (>$10 billion), consider using BigInt
  * @param a - First decimal amount
  * @param b - Second decimal amount
  * @returns The product as a properly rounded decimal
