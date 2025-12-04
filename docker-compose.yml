@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # API server with SQLite database
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3001
+      - DATABASE_URL=file:./data/invoice.db
+    volumes:
+      # Persist SQLite database
+      - invoice-data:/app/packages/api/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Nginx to serve static frontend and proxy API
+  web:
+    image: nginx:alpine
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    volumes:
+      - ./packages/web/dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  invoice-data:
+    name: invoice-generator-data

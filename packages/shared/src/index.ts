@@ -25,3 +25,15 @@ export {
   formatDate,
   parseDate,
 } from './utils';
+
+// Money utilities
+export {
+  toCents,
+  fromCents,
+  multiplyMoney,
+  addMoney,
+  subtractMoney,
+  percentageOf,
+  roundMoney,
+  parseDecimalInput,
+} from './money';

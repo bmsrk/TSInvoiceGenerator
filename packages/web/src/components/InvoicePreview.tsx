@@ -31,10 +31,15 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
 
     setExporting(true);
     try {
+      // Use ignoreElements option to exclude export controls from the PDF
       const canvas = await html2canvas(invoiceRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
+        ignoreElements: (element) => {
+          // Ignore elements with data-html2canvas-ignore attribute
+          return element.hasAttribute('data-html2canvas-ignore');
+        },
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -212,9 +217,11 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
           <span className={`status-badge ${invoice.status.toLowerCase()}`}>
             {invoice.status}
           </span>
+          {/* Export button is excluded from PDF export via data-html2canvas-ignore */}
           <button
             onClick={handleExportPDF}
             disabled={exporting}
+            data-html2canvas-ignore="true"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
