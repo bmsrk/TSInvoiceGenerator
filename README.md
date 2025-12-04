@@ -1,6 +1,6 @@
 # Invoice Generator
 
-A modern, full-stack TypeScript invoice generator built with Node.js, Hono, React, and SQLite. Features persistent storage, CRUD management for companies, customers, and services, and PDF export.
+A modern, full-stack TypeScript invoice generator built with Node.js, Hono, React, and SQLite. Features persistent storage, CRUD management for companies, customers, and services, PDF export, and **desktop application** via Electron.
 
 ## 📸 Screenshots
 
@@ -16,6 +16,7 @@ A modern, full-stack TypeScript invoice generator built with Node.js, Hono, Reac
 ## 🚀 Features
 
 - **Modern Stack**: Node.js, Hono API, React frontend, SQLite database
+- **Desktop App**: Standalone executable via Electron (Windows, macOS, Linux)
 - **Persistent Storage**: SQLite database with Prisma ORM
 - **CRUD Management**: Manage companies, customers, and services
 - **Decimal Support**: Hours and rates accept decimal values (e.g., 1.5 hours)
@@ -33,7 +34,8 @@ ts-invoice-generator/
 ├── packages/
 │   ├── shared/          # Shared types, utilities, and money calculations
 │   ├── api/             # Hono-based REST API with Prisma/SQLite
-│   └── web/             # React frontend with Vite
+│   ├── web/             # React frontend with Vite
+│   └── electron/        # Electron desktop application
 ├── Dockerfile           # Production Docker build
 ├── Dockerfile.dev       # Development Docker build
 ├── docker-compose.yml   # Production Docker Compose
@@ -51,7 +53,24 @@ ts-invoice-generator/
 
 ## 🏁 Getting Started
 
-### Option 1: Local Development
+### Option 1: Desktop Application (Electron)
+
+Build a standalone executable for your platform:
+
+```bash
+# Install dependencies
+npm install
+
+# Build and package for your platform
+npm run package:electron     # Build for current platform
+npm run package:win          # Build for Windows (.exe)
+npm run package:mac          # Build for macOS (.dmg)
+npm run package:linux        # Build for Linux (.AppImage, .deb)
+```
+
+The packaged application will be in `packages/electron/release/`.
+
+### Option 2: Local Development
 
 #### 1. Install Dependencies
 
@@ -261,6 +280,16 @@ interface InvoiceItem {
 | `npm run lint` | Run TypeScript type checking |
 | `npm run test` | Run tests |
 | `npm run clean` | Clean all build artifacts and dependencies |
+
+### Electron Scripts
+| Script | Description |
+|--------|-------------|
+| `npm run dev:electron` | Run Electron app in development mode |
+| `npm run build:electron` | Build all packages for Electron |
+| `npm run package:electron` | Package for current platform |
+| `npm run package:win` | Package for Windows (.exe, .nsis) |
+| `npm run package:mac` | Package for macOS (.dmg) |
+| `npm run package:linux` | Package for Linux (.AppImage, .deb) |
 
 ### API-specific Scripts
 | Script | Description |
