@@ -1,0 +1,19 @@
+{
+  "name": "ts-invoice-generator",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "npm run dev:api & npm run dev:web",
+    "dev:api": "npm run dev --workspace=@invoice/api",
+    "dev:web": "npm run dev --workspace=@invoice/web",
+    "build": "npm run build --workspaces",
+    "build:shared": "npm run build --workspace=@invoice/shared",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "rm -rf packages/*/node_modules packages/*/dist node_modules"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
