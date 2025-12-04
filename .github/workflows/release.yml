@@ -5,11 +5,6 @@ on:
     tags:
       - 'v*.*.*'
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version tag for manual release (e.g., v1.0.0)'
-        required: false
-        type: string
 
 permissions:
   contents: write
@@ -106,9 +101,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-
-      - name: List artifacts
-        run: find artifacts -type f -name "*" | head -50
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
