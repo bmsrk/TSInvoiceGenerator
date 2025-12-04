@@ -1,6 +1,6 @@
 # Invoice Generator
 
-A modern, full-stack TypeScript invoice generator built with Node.js, Hono, and React.
+A modern, full-stack TypeScript invoice generator built with Node.js, Hono, React, and SQLite. Features persistent storage, CRUD management for companies, customers, and services, PDF export, and **desktop application** via Electron.
 
 ## 📸 Screenshots
 
@@ -15,12 +15,16 @@ A modern, full-stack TypeScript invoice generator built with Node.js, Hono, and 
 
 ## 🚀 Features
 
-- **Modern Stack**: Built with Bun for blazing fast development
-- **Monorepo Structure**: Easy to manage with workspace support
+- **Modern Stack**: Node.js, Hono API, React frontend, SQLite database
+- **Desktop App**: Standalone executable via Electron (Windows, macOS, Linux)
+- **Persistent Storage**: SQLite database with Prisma ORM
+- **CRUD Management**: Manage companies, customers, and services
+- **Decimal Support**: Hours and rates accept decimal values (e.g., 1.5 hours)
+- **Safe Money Calculations**: Avoids floating-point errors with proper rounding
+- **PDF Export**: Export invoices to PDF (export button hidden from PDF output)
 - **Dark Mode UI**: Beautiful, modern dark theme interface
 - **Type-Safe**: Full TypeScript support across all packages
-- **Invoice Management**: Create, view, and manage invoices
-- **Real-time Calculations**: Automatic tax and total calculations
+- **Docker Support**: Run with Docker Compose for easy deployment
 - **Status Tracking**: Track invoice status (Draft, Pending, Paid, Overdue)
 
 ## 📦 Project Structure
@@ -28,9 +32,15 @@ A modern, full-stack TypeScript invoice generator built with Node.js, Hono, and 
 ```
 ts-invoice-generator/
 ├── packages/
-│   ├── shared/          # Shared types and utilities
-│   ├── api/             # Hono-based REST API
-│   └── web/             # React frontend with Vite
+│   ├── shared/          # Shared types, utilities, and money calculations
+│   ├── api/             # Hono-based REST API with Prisma/SQLite
+│   ├── web/             # React frontend with Vite
+│   └── electron/        # Electron desktop application
+├── Dockerfile           # Production Docker build
+├── Dockerfile.dev       # Development Docker build
+├── docker-compose.yml   # Production Docker Compose
+├── docker-compose.dev.yml # Development Docker Compose
+├── nginx.conf           # Nginx config for serving frontend
 ├── package.json         # Root package with workspace config
 └── tsconfig.json        # Base TypeScript configuration
 ```
@@ -39,24 +49,51 @@ ts-invoice-generator/
 
 - [Node.js](https://nodejs.org/) (v18 or higher)
 - npm (comes with Node.js)
-
-> **Note**: This project is also compatible with [Bun](https://bun.sh/) for faster performance.
+- [Docker](https://www.docker.com/) (optional, for containerized deployment)
 
 ## 🏁 Getting Started
 
-### 1. Install Dependencies
+### Option 1: Desktop Application (Electron)
+
+Build a standalone executable for your platform:
+
+```bash
+# Install dependencies
+npm install
+
+# Build and package for your platform
+npm run package:electron     # Build for current platform
+npm run package:win          # Build for Windows (.exe)
+npm run package:mac          # Build for macOS (.dmg)
+npm run package:linux        # Build for Linux (.AppImage, .deb)
+```
+
+The packaged application will be in `packages/electron/release/`.
+
+### Option 2: Local Development
+
+#### 1. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Build the shared package first
+#### 2. Build the shared package
 
 ```bash
 npm run build:shared
 ```
 
-### 3. Start Development Servers
+#### 3. Set up the database
+
+```bash
+cd packages/api
+cp .env.example .env
+npx prisma migrate dev
+cd ../..
+```
+
+#### 4. Start Development Servers
 
 Run both API and web development servers:
 
@@ -68,13 +105,64 @@ npm run dev:api
 npm run dev:web
 ```
 
-### 4. Access the Application
+#### 5. Access the Application
 
 - **Web UI**: http://localhost:5173
 - **API**: http://localhost:3001
 
+### Option 2: Docker Deployment
+
+#### 1. Build and run with Docker Compose
+
+```bash
+# Build the web frontend first (required for nginx)
+npm install
+npm run build:shared
+npm run build
+
+# Start the containers
+docker-compose up -d
+```
+
+#### 2. Access the Application
+
+- **Web UI**: http://localhost:8080
+- **API**: http://localhost:3001
+
+The SQLite database is persisted in a Docker volume named `invoice-generator-data`.
+
+## 🔧 Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3001` | API server port |
+| `NODE_ENV` | `development` | Environment mode |
+| `DATABASE_URL` | `file:./dev.db` | SQLite database path |
+| `WEB_PORT` | `8080` | Web UI port (Docker only) |
+
+## 📖 Application Screens
+
+### Companies (`/companies`)
+Manage your company profiles. Set one as default for quick invoice creation.
+
+### Customers (`/customers`)
+Maintain your customer list with contact information, addresses, and tax IDs.
+
+### Services (`/services`)
+Create a service catalog with descriptions and default hourly rates.
+
+### Create Invoice (`/invoices/new`)
+- Select company and customer from dropdowns
+- Quick-add services from your catalog
+- Add custom line items with decimal hours and rates
+- Automatic tax and total calculations
+
+### Invoice List (`/`)
+View all invoices, update status, preview, and export to PDF.
+
 ## 📖 API Endpoints
 
+### Invoices
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/invoices` | Get all invoices |
@@ -84,8 +172,78 @@ npm run dev:web
 | PATCH | `/api/invoices/:id/status` | Update invoice status |
 | DELETE | `/api/invoices/:id` | Delete invoice |
 
-## 🧪 Invoice Model
+### Companies
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/companies` | Get all companies |
+| GET | `/api/companies/:id` | Get company by ID |
+| POST | `/api/companies` | Create new company |
+| PUT | `/api/companies/:id` | Update company |
+| DELETE | `/api/companies/:id` | Delete company |
 
+### Customers
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/customers` | Get all customers |
+| GET | `/api/customers/:id` | Get customer by ID |
+| POST | `/api/customers` | Create new customer |
+| PUT | `/api/customers/:id` | Update customer |
+| DELETE | `/api/customers/:id` | Delete customer |
+
+### Services
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/services` | Get all services |
+| GET | `/api/services/:id` | Get service by ID |
+| POST | `/api/services` | Create new service |
+| PUT | `/api/services/:id` | Update service |
+| DELETE | `/api/services/:id` | Delete service |
+
+## 🧪 Data Models
+
+### Company
+```typescript
+interface Company {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  taxId?: string;
+  isDefault: boolean;
+}
+```
+
+### Customer
+```typescript
+interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  taxId?: string;
+}
+```
+
+### Service
+```typescript
+interface Service {
+  id: string;
+  description: string;
+  defaultRate: number; // Supports decimals
+}
+```
+
+### Invoice
 ```typescript
 interface Invoice {
   id: string;
@@ -93,8 +251,8 @@ interface Invoice {
   createdAt: Date;
   dueDate: Date;
   status: 'DRAFT' | 'PENDING' | 'PAID' | 'OVERDUE' | 'CANCELLED';
-  from: Party;
-  to: Party;
+  from: Party;    // Company info
+  to: Party;      // Customer info
   items: InvoiceItem[];
   currency: CurrencyCode;
   paymentTerms: PaymentTerms;
@@ -102,19 +260,11 @@ interface Invoice {
   termsAndConditions?: string;
 }
 
-interface Party {
-  name: string;
-  email: string;
-  phone?: string;
-  address: Address;
-  taxId?: string;
-}
-
 interface InvoiceItem {
   id: string;
   description: string;
-  quantity: number;
-  unitPrice: number;
+  quantity: number;   // Supports decimal hours (e.g., 1.5)
+  unitPrice: number;  // Supports decimal rates
   taxRate: number;
 }
 ```
@@ -131,25 +281,70 @@ interface InvoiceItem {
 | `npm run test` | Run tests |
 | `npm run clean` | Clean all build artifacts and dependencies |
 
-## 📝 Learning Resources
+### Electron Scripts
+| Script | Description |
+|--------|-------------|
+| `npm run dev:electron` | Run Electron app in development mode |
+| `npm run build:electron` | Build all packages for Electron |
+| `npm run package:electron` | Package for current platform |
+| `npm run package:win` | Package for Windows (.exe, .nsis) |
+| `npm run package:mac` | Package for macOS (.dmg) |
+| `npm run package:linux` | Package for Linux (.AppImage, .deb) |
 
-This project is designed to help you learn:
+### API-specific Scripts
+| Script | Description |
+|--------|-------------|
+| `npm run db:generate` | Generate Prisma client |
+| `npm run db:migrate` | Run database migrations |
+| `npm run db:push` | Push schema to database |
+| `npm run db:seed` | Seed database with sample data |
 
-- **TypeScript**: Type-safe JavaScript with interfaces and generics
-- **Bun**: Fast JavaScript runtime and package manager
-- **Hono**: Lightweight web framework for building APIs
-- **React**: Component-based UI development
-- **Vite**: Next-generation frontend tooling
-- **Monorepo**: Managing multiple packages in a single repository
+## 🧪 Testing
+
+Run all tests:
+```bash
+npm run test
+```
+
+The test suite includes:
+- Money utility functions (floating-point safe calculations)
+- Invoice calculation scenarios with decimal hours
+
+## 💡 Key Features Explained
+
+### Decimal Hours and Rates
+The application supports decimal values for hours worked and hourly rates:
+- Enter `1.5` hours for 1 hour 30 minutes
+- Enter `125.50` for a rate of $125.50/hour
+
+### Safe Money Calculations
+All monetary calculations use the money utility module (`packages/shared/src/money.ts`) to avoid JavaScript floating-point errors:
+```typescript
+// Instead of: 0.1 + 0.2 = 0.30000000000000004
+// We get: addMoney(0.1, 0.2) = 0.3
+```
+
+### PDF Export
+The PDF export feature uses html2canvas and jsPDF. The export button is automatically hidden from the PDF output using the `data-html2canvas-ignore` attribute.
+
+## 📝 Sample Data
+
+On first startup, the database is seeded with sample data:
+- 2 companies (Acme Corp, Tech Solutions LLC)
+- 3 customers (Client Company, Startup Inc, Global Enterprises)
+- 8 service types (Web Development, UI/UX Design, etc.)
+- 1 sample invoice
 
 ## 🔧 Customization
 
 ### Adding New Invoice Fields
 
-1. Update the types in `packages/shared/src/types.ts`
-2. Update the API handlers in `packages/api/src/index.ts`
-3. Update the form in `packages/web/src/components/InvoiceForm.tsx`
-4. Update the preview in `packages/web/src/components/InvoicePreview.tsx`
+1. Update the Prisma schema in `packages/api/prisma/schema.prisma`
+2. Run `npx prisma migrate dev` to update the database
+3. Update the types in `packages/shared/src/types.ts`
+4. Update the API handlers in `packages/api/src/services/invoiceService.ts`
+5. Update the form in `packages/web/src/pages/NewInvoicePage.tsx`
+6. Update the preview in `packages/web/src/components/InvoicePreview.tsx`
 
 ### Changing the Theme
 

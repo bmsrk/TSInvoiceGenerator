@@ -1,4 +1,5 @@
 import type { Invoice, InvoiceItem, InvoiceTotals, CreateInvoiceRequest, PaymentTerms } from './types';
+import { multiplyMoney, addMoney, percentageOf, roundMoney } from './money';
 
 /**
  * Generate a unique ID
@@ -19,39 +20,39 @@ export function generateInvoiceNumber(): string {
 }
 
 /**
- * Calculate line item total (quantity * unitPrice)
+ * Calculate line item total (quantity * unitPrice) using safe money arithmetic
  */
 export function calculateItemSubtotal(item: InvoiceItem): number {
-  return item.quantity * item.unitPrice;
+  return multiplyMoney(item.quantity, item.unitPrice);
 }
 
 /**
- * Calculate line item tax
+ * Calculate line item tax using safe money arithmetic
  */
 export function calculateItemTax(item: InvoiceItem): number {
   const subtotal = calculateItemSubtotal(item);
-  return subtotal * (item.taxRate / 100);
+  return percentageOf(subtotal, item.taxRate);
 }
 
 /**
  * Calculate line item total including tax
  */
 export function calculateItemTotal(item: InvoiceItem): number {
-  return calculateItemSubtotal(item) + calculateItemTax(item);
+  return addMoney(calculateItemSubtotal(item), calculateItemTax(item));
 }
 
 /**
- * Calculate invoice totals
+ * Calculate invoice totals using safe money arithmetic
  */
 export function calculateInvoiceTotals(items: InvoiceItem[]): InvoiceTotals {
-  const subtotal = items.reduce((sum, item) => sum + calculateItemSubtotal(item), 0);
-  const totalTax = items.reduce((sum, item) => sum + calculateItemTax(item), 0);
-  const total = subtotal + totalTax;
+  const subtotal = items.reduce((sum, item) => addMoney(sum, calculateItemSubtotal(item)), 0);
+  const totalTax = items.reduce((sum, item) => addMoney(sum, calculateItemTax(item)), 0);
+  const total = addMoney(subtotal, totalTax);
 
   return {
-    subtotal: Math.round(subtotal * 100) / 100,
-    totalTax: Math.round(totalTax * 100) / 100,
-    total: Math.round(total * 100) / 100,
+    subtotal: roundMoney(subtotal),
+    totalTax: roundMoney(totalTax),
+    total: roundMoney(total),
   };
 }
 

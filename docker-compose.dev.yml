@@ -1,0 +1,27 @@
+version: '3.8'
+
+# Development docker-compose - uses local build and hot reload
+services:
+  # API server with SQLite database
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    ports:
+      - "${PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=file:./data/invoice.db
+    volumes:
+      # Persist SQLite database
+      - invoice-data:/app/packages/api/data
+      # Mount source for development (if using tsx watch)
+      - ./packages/api/src:/app/packages/api/src:ro
+      - ./packages/shared/src:/app/packages/shared/src:ro
+    restart: unless-stopped
+
+volumes:
+  invoice-data:
+    name: invoice-generator-data-dev
