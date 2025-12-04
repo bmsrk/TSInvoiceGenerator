@@ -121,7 +121,7 @@ export default function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
       setFromZip(savedMyCompany.address.zipCode);
       setFromCountry(savedMyCompany.address.country);
     }
-  }, []);
+  }, [savedMyCompany]);
 
   // Save My Company
   const handleSaveMyCompany = () => {
@@ -147,7 +147,7 @@ export default function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
     if (!toName || !toEmail) return;
     
     const newClient: SavedCompany = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       name: toName,
       email: toEmail,
       phone: toPhone || undefined,
