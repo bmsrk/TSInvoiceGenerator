@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CreateInvoiceRequest, CurrencyCode, PaymentTerms } from '@invoice/shared';
 import { createInvoice } from '../api';
 
@@ -7,25 +7,76 @@ interface InvoiceFormProps {
   onCancel: () => void;
 }
 
-interface ItemInput {
-  description: string;
-  quantity: string;
-  unitPrice: string;
-  taxRate: string;
+interface ServiceInput {
+  projectName: string;
+  hours: string;
 }
 
-const defaultItem: ItemInput = {
-  description: '',
-  quantity: '1',
-  unitPrice: '0',
-  taxRate: '10',
+interface SavedCompany {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+}
+
+// LocalStorage keys
+const STORAGE_KEYS = {
+  MY_COMPANY: 'invoice_my_company',
+  SAVED_CLIENTS: 'invoice_saved_clients',
+  HOURLY_RATE: 'invoice_hourly_rate',
+  TAX_RATE: 'invoice_tax_rate',
+};
+
+// Load saved data from localStorage
+function loadFromStorage<T>(key: string, defaultValue: T): T {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+}
+
+// Save data to localStorage
+function saveToStorage<T>(key: string, value: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    console.error('Failed to save to localStorage');
+  }
+}
+
+const defaultService: ServiceInput = {
+  projectName: '',
+  hours: '',
 };
 
 export default function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Form state
+  // Load saved data
+  const [savedMyCompany, setSavedMyCompany] = useState<SavedCompany | null>(() => 
+    loadFromStorage(STORAGE_KEYS.MY_COMPANY, null)
+  );
+  const [savedClients, setSavedClients] = useState<SavedCompany[]>(() => 
+    loadFromStorage(STORAGE_KEYS.SAVED_CLIENTS, [])
+  );
+  const [savedRate, setSavedRate] = useState<string>(() => 
+    loadFromStorage(STORAGE_KEYS.HOURLY_RATE, '100')
+  );
+  const [savedTaxRate, setSavedTaxRate] = useState<string>(() => 
+    loadFromStorage(STORAGE_KEYS.TAX_RATE, '0')
+  );
+
+  // My Company (From) state
   const [fromName, setFromName] = useState('');
   const [fromEmail, setFromEmail] = useState('');
   const [fromPhone, setFromPhone] = useState('');
@@ -35,6 +86,7 @@ export default function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
   const [fromZip, setFromZip] = useState('');
   const [fromCountry, setFromCountry] = useState('USA');
 
+  // Client (To) state
   const [toName, setToName] = useState('');
   const [toEmail, setToEmail] = useState('');
   const [toPhone, setToPhone] = useState('');
@@ -44,25 +96,134 @@ export default function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
   const [toZip, setToZip] = useState('');
   const [toCountry, setToCountry] = useState('USA');
 
-  const [items, setItems] = useState<ItemInput[]>([{ ...defaultItem }]);
+  // Selected saved client
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
+
+  // Services (Project Name + Hours)
+  const [services, setServices] = useState<ServiceInput[]>([{ ...defaultService }]);
+  
+  // Rate and other settings
+  const [hourlyRate, setHourlyRate] = useState(savedRate);
+  const [taxRate, setTaxRate] = useState(savedTaxRate);
   const [currency, setCurrency] = useState<CurrencyCode>('USD');
   const [paymentTerms, setPaymentTerms] = useState<PaymentTerms>('NET_30');
   const [notes, setNotes] = useState('');
 
-  const addItem = () => {
-    setItems([...items, { ...defaultItem }]);
+  // Load My Company data on mount
+  useEffect(() => {
+    if (savedMyCompany) {
+      setFromName(savedMyCompany.name);
+      setFromEmail(savedMyCompany.email);
+      setFromPhone(savedMyCompany.phone || '');
+      setFromStreet(savedMyCompany.address.street);
+      setFromCity(savedMyCompany.address.city);
+      setFromState(savedMyCompany.address.state);
+      setFromZip(savedMyCompany.address.zipCode);
+      setFromCountry(savedMyCompany.address.country);
+    }
+  }, []);
+
+  // Save My Company
+  const handleSaveMyCompany = () => {
+    const myCompany: SavedCompany = {
+      id: 'my-company',
+      name: fromName,
+      email: fromEmail,
+      phone: fromPhone || undefined,
+      address: {
+        street: fromStreet,
+        city: fromCity,
+        state: fromState,
+        zipCode: fromZip,
+        country: fromCountry,
+      },
+    };
+    saveToStorage(STORAGE_KEYS.MY_COMPANY, myCompany);
+    setSavedMyCompany(myCompany);
   };
 
-  const removeItem = (index: number) => {
-    if (items.length > 1) {
-      setItems(items.filter((_, i) => i !== index));
+  // Save current client
+  const handleSaveClient = () => {
+    if (!toName || !toEmail) return;
+    
+    const newClient: SavedCompany = {
+      id: Date.now().toString(),
+      name: toName,
+      email: toEmail,
+      phone: toPhone || undefined,
+      address: {
+        street: toStreet,
+        city: toCity,
+        state: toState,
+        zipCode: toZip,
+        country: toCountry,
+      },
+    };
+    
+    // Check if client already exists (by name)
+    const existingIndex = savedClients.findIndex(c => c.name === toName);
+    let updatedClients: SavedCompany[];
+    
+    if (existingIndex >= 0) {
+      updatedClients = [...savedClients];
+      updatedClients[existingIndex] = newClient;
+    } else {
+      updatedClients = [...savedClients, newClient];
+    }
+    
+    saveToStorage(STORAGE_KEYS.SAVED_CLIENTS, updatedClients);
+    setSavedClients(updatedClients);
+    setSelectedClientId(newClient.id);
+  };
+
+  // Load a saved client
+  const handleLoadClient = (clientId: string) => {
+    setSelectedClientId(clientId);
+    const client = savedClients.find(c => c.id === clientId);
+    if (client) {
+      setToName(client.name);
+      setToEmail(client.email);
+      setToPhone(client.phone || '');
+      setToStreet(client.address.street);
+      setToCity(client.address.city);
+      setToState(client.address.state);
+      setToZip(client.address.zipCode);
+      setToCountry(client.address.country);
     }
   };
 
-  const updateItem = (index: number, field: keyof ItemInput, value: string) => {
-    const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setItems(newItems);
+  // Delete a saved client
+  const handleDeleteClient = (clientId: string) => {
+    const updatedClients = savedClients.filter(c => c.id !== clientId);
+    saveToStorage(STORAGE_KEYS.SAVED_CLIENTS, updatedClients);
+    setSavedClients(updatedClients);
+    if (selectedClientId === clientId) {
+      setSelectedClientId('');
+    }
+  };
+
+  // Save hourly rate
+  const handleSaveRate = () => {
+    saveToStorage(STORAGE_KEYS.HOURLY_RATE, hourlyRate);
+    saveToStorage(STORAGE_KEYS.TAX_RATE, taxRate);
+    setSavedRate(hourlyRate);
+    setSavedTaxRate(taxRate);
+  };
+
+  const addService = () => {
+    setServices([...services, { ...defaultService }]);
+  };
+
+  const removeService = (index: number) => {
+    if (services.length > 1) {
+      setServices(services.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateService = (index: number, field: keyof ServiceInput, value: string) => {
+    const newServices = [...services];
+    newServices[index] = { ...newServices[index], [field]: value };
+    setServices(newServices);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,11 +257,11 @@ export default function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
             country: toCountry,
           },
         },
-        items: items.map(item => ({
-          description: item.description,
-          quantity: parseFloat(item.quantity) || 0,
-          unitPrice: parseFloat(item.unitPrice) || 0,
-          taxRate: parseFloat(item.taxRate) || 0,
+        items: services.map(service => ({
+          description: service.projectName,
+          quantity: parseFloat(service.hours) || 0,
+          unitPrice: parseFloat(hourlyRate) || 0,
+          taxRate: parseFloat(taxRate) || 0,
         })),
         currency,
         paymentTerms,
@@ -125,9 +286,19 @@ export default function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
           </div>
         )}
 
-        {/* From Section */}
+        {/* From Section - My Company */}
         <div className="mb-6">
-          <h4 className="mb-4">From (Your Business)</h4>
+          <div className="flex justify-between items-center mb-4">
+            <h4>From (My Company)</h4>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleSaveMyCompany}
+              disabled={!fromName || !fromEmail}
+            >
+              {savedMyCompany ? '✓ Update Saved' : 'Save My Company'}
+            </button>
+          </div>
           <div className="grid grid-2">
             <div className="form-group">
               <label className="form-label">Business Name *</label>
@@ -219,9 +390,51 @@ export default function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
           </div>
         </div>
 
-        {/* To Section */}
+        {/* To Section - Client */}
         <div className="mb-6">
-          <h4 className="mb-4">Bill To (Client)</h4>
+          <div className="flex justify-between items-center mb-4">
+            <h4>Bill To (Client)</h4>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleSaveClient}
+              disabled={!toName || !toEmail}
+            >
+              Save Client
+            </button>
+          </div>
+          
+          {/* Saved Clients Dropdown */}
+          {savedClients.length > 0 && (
+            <div className="form-group mb-4">
+              <label className="form-label">Load Saved Client</label>
+              <div className="flex gap-2">
+                <select
+                  className="form-select"
+                  value={selectedClientId}
+                  onChange={e => handleLoadClient(e.target.value)}
+                  style={{ flex: 1 }}
+                >
+                  <option value="">-- Select a saved client --</option>
+                  {savedClients.map(client => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))}
+                </select>
+                {selectedClientId && (
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => handleDeleteClient(selectedClientId)}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+          
           <div className="grid grid-2">
             <div className="form-group">
               <label className="form-label">Client Name *</label>
@@ -313,70 +526,89 @@ export default function InvoiceForm({ onSuccess, onCancel }: InvoiceFormProps) {
           </div>
         </div>
 
-        {/* Items Section */}
+        {/* Rate Settings */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h4>Line Items</h4>
-            <button type="button" className="btn btn-secondary" onClick={addItem}>
-              + Add Item
+            <h4>Rate Settings</h4>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleSaveRate}
+            >
+              {savedRate === hourlyRate && savedTaxRate === taxRate ? '✓ Saved' : 'Save Rate'}
+            </button>
+          </div>
+          <div className="grid grid-2">
+            <div className="form-group">
+              <label className="form-label">Hourly Rate *</label>
+              <input
+                type="number"
+                className="form-input"
+                value={hourlyRate}
+                onChange={e => setHourlyRate(e.target.value)}
+                min="0"
+                step="0.01"
+                placeholder="100"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Tax Rate (%)</label>
+              <input
+                type="number"
+                className="form-input"
+                value={taxRate}
+                onChange={e => setTaxRate(e.target.value)}
+                min="0"
+                step="0.01"
+                placeholder="0"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Services Section */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h4>Services</h4>
+            <button type="button" className="btn btn-secondary" onClick={addService}>
+              + Add Service
             </button>
           </div>
           
-          {items.map((item, index) => (
+          {services.map((service, index) => (
             <div key={index} className="card mb-3" style={{ background: 'var(--bg-tertiary)' }}>
-              <div className="grid grid-4" style={{ alignItems: 'end' }}>
+              <div className="grid grid-3" style={{ alignItems: 'end' }}>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label className="form-label">Description *</label>
+                  <label className="form-label">Project Name *</label>
                   <input
                     type="text"
                     className="form-input"
-                    value={item.description}
-                    onChange={e => updateItem(index, 'description', e.target.value)}
-                    placeholder="Web Development Services"
+                    value={service.projectName}
+                    onChange={e => updateService(index, 'projectName', e.target.value)}
+                    placeholder="Website Development"
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Quantity *</label>
+                  <label className="form-label">Hours (decimal) *</label>
                   <input
                     type="number"
                     className="form-input"
-                    value={item.quantity}
-                    onChange={e => updateItem(index, 'quantity', e.target.value)}
+                    value={service.hours}
+                    onChange={e => updateService(index, 'hours', e.target.value)}
                     min="0"
                     step="0.01"
+                    placeholder="10.5"
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Unit Price *</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={item.unitPrice}
-                    onChange={e => updateItem(index, 'unitPrice', e.target.value)}
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Tax Rate (%)</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={item.taxRate}
-                    onChange={e => updateItem(index, 'taxRate', e.target.value)}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                <div className="form-group">
-                  {items.length > 1 && (
+                  {services.length > 1 && (
                     <button
                       type="button"
                       className="btn btn-danger"
-                      onClick={() => removeItem(index)}
+                      onClick={() => removeService(index)}
                     >
                       Remove
                     </button>
