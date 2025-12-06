@@ -28,7 +28,10 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
     setExporting(true);
     try {
       // Request server-rendered PDF. The API will return `application/pdf`.
-      const resp = await fetch(`/api/invoices/${invoice.id}/pdf`);
+      // If running inside Electron (file://) the frontend may not be served from the API origin.
+      // Use a localhost API origin in that case (Electron embeds the API on port 3001).
+      const apiOrigin = window.location.protocol === 'file:' ? 'http://localhost:3001' : '';
+      const resp = await fetch(`${apiOrigin}/api/invoices/${invoice.id}/pdf`);
       if (!resp.ok) throw new Error('Failed to generate PDF');
 
       const blob = await resp.blob();

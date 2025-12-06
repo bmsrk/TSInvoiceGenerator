@@ -5,6 +5,8 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { spawnSync } from 'child_process';
+import fs from 'fs';
 import { Command } from 'commander';
 import prompts from 'prompts';
 import chalk from 'chalk';
@@ -400,6 +402,60 @@ async function viewInvoiceDetails(invoiceId: string): Promise<void> {
     console.log(chalk.bold('Notes:'));
     console.log(`  ${invoice.notes}\n`);
   }
+
+  // Allow exporting PDF from CLI
+  const { exportAction } = await prompts([
+    {
+      type: 'select',
+      name: 'exportAction',
+      message: 'Export options',
+      choices: [
+        { title: '⬇️  Export to PDF (attempt wkhtmltopdf)', value: 'export-pdf' },
+        { title: '⬅️  Back', value: 'back' },
+      ],
+    },
+  ]);
+
+  if (exportAction === 'export-pdf') {
+    await exportInvoiceToPdf(invoiceId);
+  }
+}
+
+async function exportInvoiceToPdf(invoiceId: string, outPath?: string) {
+  const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId }, include: { company: true, customer: true, items: true } });
+  if (!invoice) {
+    console.log(chalk.red('❌ Invoice not found.'));
+    return;
+  }
+
+  outPath = outPath ?? `${invoice.invoiceNumber}.pdf`;
+
+  // Build a minimal HTML like the web/server templates use
+  const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1" /><title>${invoice.invoiceNumber}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#0f172a}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #e5e7eb}</style></head><body><h1>${invoice.invoiceNumber}</h1><div>To: ${invoice.customer.name}</div><table><thead><tr><th>Description</th><th style="text-align:right">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Amount</th></tr></thead><tbody>${invoice.items.map(i=>`<tr><td>${escapeHtml(i.description)}</td><td style="text-align:right">${i.quantity}</td><td style="text-align:right">${i.unitPrice}</td><td style="text-align:right">${(i.quantity*i.unitPrice).toFixed(2)}</td></tr>`).join('')}</tbody></table></body></html>`;
+
+  // Attempt to run wkhtmltopdf if available
+  try {
+    const spawned = spawnSync('wkhtmltopdf', ['-q', '-', '-'], { input: Buffer.from(html) });
+    if (spawned.status === 0) {
+      fs.writeFileSync(outPath, spawned.stdout);
+      console.log(chalk.green(`✅ PDF exported to ${outPath}`));
+      return;
+    }
+    // If wkhtmltopdf returned non-zero, fall-through to saving HTML
+    console.log(chalk.yellow('⚠️  wkhtmltopdf returned error — saving HTML instead.'));
+  } catch (err) {
+    // spawnSync might throw if binary not found
+    console.log(chalk.yellow('⚠️  wkhtmltopdf not found on PATH or failed to run.')); 
+  }
+
+  // Save HTML fallback to disk
+  const htmlOut = outPath.replace(/\.pdf$/i, '.html');
+  fs.writeFileSync(htmlOut, html);
+  console.log(chalk.green(`✅ Saved invoice HTML to ${htmlOut}. You can convert it using wkhtmltopdf or your preferred tool.`));
+}
+
+function escapeHtml(input: unknown) {
+  return String(input ?? '').replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
 }
 
 async function updateInvoiceStatus(invoiceId: string): Promise<void> {

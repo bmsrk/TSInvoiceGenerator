@@ -144,6 +144,15 @@ This creates a single binary that includes:
 
 The binary can be distributed and run without requiring Bun or Node.js to be installed.
 
+## Exporting PDF from the CLI
+
+You can export an invoice to a PDF from the TUI. When viewing invoice details, choose `Export to PDF` and the CLI will attempt to:
+
+- Run `wkhtmltopdf` if it is available on your PATH, piping the generated HTML to wkhtmltopdf and writing a PDF file.
+- If `wkhtmltopdf` is not installed or fails, the CLI will save a fallback HTML file (same base name but with .html) that you can convert locally with any HTML→PDF tool (or use the server's API PDF endpoint if you have the API running).
+
+Tip: For the highest-quality PDF output prefer installing `wkhtmltopdf` on your system. On many Linux distributions you can use the package manager; on macOS use Homebrew; on Windows download the official executable from https://wkhtmltopdf.org/.
+
 ## Development
 
 The entire CLI is in a single file (`index.ts`) for simplicity:

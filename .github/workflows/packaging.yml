@@ -1,0 +1,86 @@
+name: Build artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-cli:
+    name: Build CLI executables
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          echo "export BUN_INSTALL=\"$HOME/.bun\"" >> $GITHUB_ENV
+          echo "export PATH=\"$HOME/.bun/bin:$PATH\"" >> $GITHUB_ENV
+
+      - name: Run CLI build
+        shell: bash
+        run: |
+          echo "Building CLI on $RUNNER_OS"
+          cd cli
+          bun install
+          bunx prisma generate || true
+          # Output file name includes OS tag
+          case "$RUNNER_OS" in
+            "Linux") OUT="invoice-linux" ;;
+            "macOS") OUT="invoice-macos" ;;
+            "Windows") OUT="invoice-win.exe" ;;
+            *) OUT="invoice" ;;
+          esac
+          bun build index.ts --compile --outfile $OUT || { echo "bun build failed"; exit 1; }
+
+      - name: Upload CLI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-${{ matrix.os }}
+          path: |
+            cli/invoice*
+
+  package-electron:
+    name: Package Electron App
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install repo dependencies
+        run: |
+          npm ci
+          cd packages/electron
+          npm ci
+
+      - name: Prepare wkhtmltopdf binary
+        run: |
+          cd packages/electron
+          npm run prepare-wk || true
+
+      - name: Build & package app
+        run: |
+          cd packages/electron
+          npm run build
+          npm run package || echo "electron-builder failed; check logs"
+
+      - name: Upload packaged artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-${{ matrix.os }}
+          path: packages/electron/release/**

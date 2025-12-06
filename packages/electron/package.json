@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "electron .",
     "build": "tsc",
+    "prepare-wk": "node ./scripts/copy-wkhtmltopdf.js",
     "package": "electron-builder",
     "package:win": "electron-builder --win",
     "package:mac": "electron-builder --mac",
@@ -16,6 +17,7 @@
     "@invoice/api": "*",
     "@invoice/shared": "*",
     "@prisma/client": "^5.22.0",
+    "wkhtmltopdf-installer": "^0.4.0",
     "dotenv": "^17.2.3",
     "hono": "^4.0.0"
   },
@@ -44,6 +46,10 @@
       {
         "from": "../api/prisma",
         "to": "prisma"
+      },
+      {
+        "from": "./wk",
+        "to": "wkhtmltopdf"
       }
     ],
     "win": {

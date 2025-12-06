@@ -55,11 +55,20 @@ See [cli/README.md](cli/README.md) for full CLI documentation.
 - **Decimal Support**: Hours and rates accept decimal values (e.g., 1.5 hours)
 - **Safe Money Calculations**: Avoids floating-point errors with proper rounding
 - **PDF Export**: Export invoices to PDF (web version)
+  - **Server-side PDF export**: High-fidelity server-rendered PDFs using wkhtmltopdf (with a Puppeteer-based fallback). The web UI now downloads the server-generated PDF for better quality.
 - **Dark Mode UI**: Beautiful, modern dark theme interface
 - **Type-Safe**: Full TypeScript support across all packages
 - **Docker Support**: Run with Docker Compose for easy deployment
 - **Status Tracking**: Track invoice status (Draft, Pending, Paid, Overdue)
 
+## 📦 Packaging & CI
+
+This repository includes a GitHub Actions workflow that builds platform artifacts and demonstrates packaging:
+
+- `.github/workflows/packaging.yml` builds CLI executables (via Bun) for Linux/macOS/Windows and packages the Electron app for each platform (uploads artifacts). The workflow is triggered on pushes to `main` or manual dispatch.
+- Electron builds include a bundled wkhtmltopdf binary (copied into `packages/electron/wk/` via `prepare-wk`) so PDF export works out-of-the-box in the packaged app.
+
+Notes: CI packaging is a demonstration and may require additional signing/notarization steps (and secrets) for production-ready installers.
 ## 📦 Project Structure
 
 ```
@@ -88,6 +97,7 @@ ts-invoice-generator/
 - [Node.js](https://nodejs.org/) v18+ (for web/electron)
 - npm (comes with Node.js)
 - [Docker](https://www.docker.com/) (optional, for containerized deployment)
+ - [wkhtmltopdf](https://wkhtmltopdf.org/) — recommended for the best PDF quality (see packages/api/README.md). If the binary isn't installed the API will fall back to using Puppeteer (Chromium) to render PDFs.
 
 ## 🏁 Getting Started
 
@@ -123,6 +133,7 @@ Features:
 - 🏢 Manage companies, customers, and services
 - 📊 View statistics dashboard
 - 🌱 Auto-seed with sample data
+ - 🖨️ Export invoice PDFs via the server (desktop/web) — recommended: install wkhtmltopdf on the host machine for best results.
 
 See [cli/README.md](cli/README.md) for detailed CLI documentation.
 
@@ -212,6 +223,17 @@ The SQLite database is persisted in a Docker volume named `invoice-generator-dat
 | `NODE_ENV` | `development` | Environment mode |
 | `DATABASE_URL` | `file:./dev.db` | SQLite database path |
 | `WEB_PORT` | `8080` | Web UI port (Docker only) |
+
+## 🖨️ Server PDF Export
+
+The API exposes a server-side PDF endpoint for invoices:
+
+- GET /api/invoices/:id/pdf — returns the invoice rendered as a high-quality PDF (Content-Type: application/pdf).
+
+Implementation notes:
+- The API uses wkhtmltopdf when a wkhtmltopdf binary is available on the host (via `wkhtmltopdf` in PATH or `wkhtmltopdf-installer`), otherwise it falls back to Puppeteer (Chromium).
+- For the best print fidelity and typography, install wkhtmltopdf on your server or desktop environment. The Electron app (when built) and the web frontend will use this endpoint to download sharper PDFs.
+
 
 ## 📖 Application Screens
 
@@ -398,7 +420,11 @@ All monetary calculations use the money utility module (`packages/shared/src/mon
 ```
 
 ### PDF Export
-The PDF export feature uses html2canvas and jsPDF. The export button is automatically hidden from the PDF output using the `data-html2canvas-ignore` attribute.
+The project now supports high-fidelity server-side PDF rendering for invoices.
+
+- By default the web UI will request `/api/invoices/:id/pdf` and download a server-produced PDF (best quality).
+- The API attempts to run `wkhtmltopdf` when available (recommended - best print fidelity), and falls back to Puppeteer/Chromium when the binary is not present.
+- The previous client-side html2canvas + jsPDF exporter remains in the git history but the web UI has been updated to use server-generated PDFs to avoid blurry image-based output.
 
 ## 📝 Sample Data
 
