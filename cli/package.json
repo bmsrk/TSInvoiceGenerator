@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "bin": {
-    "invoice": "./index.ts"
+    "invoice": "./src/index.ts"
   },
   "scripts": {
-    "dev": "bun run index.ts",
-    "build": "bun build index.ts --compile --outfile invoice",
+    "dev": "bun run src/index.ts",
+    "build": "bun build src/index.ts --compile --outfile invoice",
     "start": "./invoice"
   },
   "dependencies": {

@@ -1,15 +1,22 @@
-import prisma from '../database.js';
+/**
+ * Database initialization and seeding utilities
+ */
+
+import { PrismaClient } from '@prisma/client';
+import chalk from 'chalk';
+
+// Initialize and export Prisma Client
+export const prisma = new PrismaClient();
 
 /**
  * Seed the database with sample data
  */
 export async function seedDatabase(): Promise<void> {
-  console.log('🌱 Seeding database...');
+  console.log(chalk.blue('🌱 Seeding database...'));
 
-  // Check if data already exists
   const existingCompanies = await prisma.company.count();
   if (existingCompanies > 0) {
-    console.log('📦 Database already has data, skipping seed.');
+    console.log(chalk.yellow('📦 Database already has data, skipping seed.'));
     return;
   }
 
@@ -43,7 +50,7 @@ export async function seedDatabase(): Promise<void> {
     },
   });
 
-  console.log('✅ Created sample companies');
+  console.log(chalk.green('✅ Created sample companies'));
 
   // Create sample customers
   const clientCompany = await prisma.customer.create({
@@ -85,24 +92,23 @@ export async function seedDatabase(): Promise<void> {
     },
   });
 
-  console.log('✅ Created sample customers');
+  console.log(chalk.green('✅ Created sample customers'));
 
-  // Create sample services for each company
+  // Create sample services
   await prisma.service.createMany({
     data: [
-      // Services for Acme Corp
-      { description: 'Web Development', defaultRate: 150.00, companyId: acmeCorp.id },
-      { description: 'UI/UX Design', defaultRate: 120.00, companyId: acmeCorp.id },
-      { description: 'Project Management', defaultRate: 100.00, companyId: acmeCorp.id },
-      { description: 'Consulting', defaultRate: 175.00, companyId: acmeCorp.id },
-      { description: 'Code Review', defaultRate: 125.00, companyId: acmeCorp.id },
-      { description: 'Technical Writing', defaultRate: 85.00, companyId: acmeCorp.id },
-      { description: 'Database Design', defaultRate: 140.00, companyId: acmeCorp.id },
-      { description: 'API Development', defaultRate: 160.00, companyId: acmeCorp.id },
+      { description: 'Web Development', defaultRate: 150.0 },
+      { description: 'UI/UX Design', defaultRate: 120.0 },
+      { description: 'Project Management', defaultRate: 100.0 },
+      { description: 'Consulting', defaultRate: 175.0 },
+      { description: 'Code Review', defaultRate: 125.0 },
+      { description: 'Technical Writing', defaultRate: 85.0 },
+      { description: 'Database Design', defaultRate: 140.0 },
+      { description: 'API Development', defaultRate: 160.0 },
     ],
   });
 
-  console.log('✅ Created sample services');
+  console.log(chalk.green('✅ Created sample services'));
 
   // Create a sample invoice
   const dueDate = new Date();
@@ -116,7 +122,8 @@ export async function seedDatabase(): Promise<void> {
       currency: 'USD',
       paymentTerms: 'NET_30',
       notes: 'Thank you for your business!',
-      termsAndConditions: 'Payment is due within 30 days. Late payments may incur a 1.5% monthly interest.',
+      termsAndConditions:
+        'Payment is due within 30 days. Late payments may incur a 1.5% monthly interest.',
       companyId: acmeCorp.id,
       customerId: clientCompany.id,
       items: {
@@ -124,19 +131,19 @@ export async function seedDatabase(): Promise<void> {
           {
             description: 'Web Development Services',
             quantity: 40,
-            unitPrice: 150.00,
+            unitPrice: 150.0,
             taxRate: 10,
           },
           {
             description: 'UI/UX Design',
             quantity: 20,
-            unitPrice: 120.00,
+            unitPrice: 120.0,
             taxRate: 10,
           },
           {
             description: 'Project Management',
-            quantity: 10.5, // Decimal hours example
-            unitPrice: 100.00,
+            quantity: 10.5,
+            unitPrice: 100.0,
             taxRate: 10,
           },
         ],
@@ -144,18 +151,6 @@ export async function seedDatabase(): Promise<void> {
     },
   });
 
-  console.log('✅ Created sample invoice');
-  console.log('🎉 Database seeded successfully!');
-}
-
-// Run if executed directly
-const currentFilePath = new URL(import.meta.url).pathname;
-if (process.argv[1] === currentFilePath) {
-  seedDatabase()
-    .then(() => prisma.$disconnect())
-    .catch(async (e) => {
-      console.error('❌ Seed failed:', e);
-      await prisma.$disconnect();
-      process.exit(1);
-    });
+  console.log(chalk.green('✅ Created sample invoice'));
+  console.log(chalk.green('🎉 Database seeded successfully!'));
 }

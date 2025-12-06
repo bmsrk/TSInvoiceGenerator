@@ -1,0 +1,162 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  test-shared:
+    name: Test Shared Package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build shared package
+        run: npm run build:shared
+
+      - name: Run shared tests
+        run: npm test --workspace=@invoice/shared
+
+  test-api:
+    name: Test API Package
+    runs-on: ubuntu-latest
+    needs: test-shared
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+        run: npm install
+
+      - name: Build shared package
+        run: npm run build:shared
+
+      - name: Build API
+        run: npm run build:api
+
+      - name: Run API tests
+        run: npm test --workspace=@invoice/api
+
+  build-cli:
+    name: Build CLI
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
+
+      - name: Install CLI dependencies
+        run: |
+          cd cli
+          bun install
+
+      - name: Generate Prisma Client
+        run: |
+          cd cli
+          bunx prisma generate
+
+      - name: Test CLI build
+        run: |
+          cd cli
+          bun build src/index.ts --compile --outfile invoice
+
+  build-electron:
+    name: Build Electron (Linux)
+    runs-on: ubuntu-latest
+    needs: [test-shared, test-api]
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+        run: npm install
+
+      - name: Build all packages
+        run: npm run build:electron
+
+      - name: Verify build outputs
+        run: |
+          test -d packages/shared/dist || (echo "Shared dist missing" && exit 1)
+          test -d packages/api/dist || (echo "API dist missing" && exit 1)
+          test -d packages/web/dist || (echo "Web dist missing" && exit 1)
+          test -d packages/electron/dist || (echo "Electron dist missing" && exit 1)
+
+  lint-typescript:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+        run: npm install
+
+      - name: Build shared
+        run: npm run build:shared
+
+      - name: Check TypeScript (API)
+        run: npm run build:api
+
+      - name: Check TypeScript (Web)
+        run: npm run build:web
+
+      - name: Check TypeScript (Electron)
+        run: npm run build --workspace=@invoice/electron

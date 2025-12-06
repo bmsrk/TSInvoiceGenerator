@@ -1,4 +1,4 @@
-import prisma from '../db.js';
+import prisma from '../database.js';
 import type { Service } from '@prisma/client';
 
 export interface CreateServiceInput {

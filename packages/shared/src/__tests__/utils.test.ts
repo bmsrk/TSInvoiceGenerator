@@ -9,8 +9,8 @@ describe('shared/utils.ts', () => {
   });
 
   it('generateId returns a UUID (stubbed)', () => {
-    const spy = vi.spyOn(globalThis.crypto, 'randomUUID').mockImplementation(() => 'fixed-uuid');
-    expect(utils.generateId()).toBe('fixed-uuid');
+    const spy = vi.spyOn(globalThis.crypto, 'randomUUID').mockImplementation(() => '550e8400-e29b-41d4-a716-446655440000');
+    expect(utils.generateId()).toBe('550e8400-e29b-41d4-a716-446655440000');
     expect(spy).toHaveBeenCalled();
   });
 
@@ -84,7 +84,7 @@ describe('shared/utils.ts', () => {
 
   it('createInvoice maps fields, generates ids and defaults', () => {
     vi.setSystemTime(new Date('2025-06-01T00:00:00Z'));
-    const uuidMock = vi.spyOn(globalThis.crypto, 'randomUUID').mockImplementation(() => 'uid-123');
+    const uuidMock = vi.spyOn(globalThis.crypto, 'randomUUID').mockImplementation(() => '550e8400-e29b-41d4-a716-446655440000');
     vi.spyOn(Math, 'random').mockReturnValue(0.0001); // random for invoiceNumber part
 
     const request: CreateInvoiceRequest = {
@@ -107,8 +107,8 @@ describe('shared/utils.ts', () => {
 
     const invoice = utils.createInvoice(request);
     expect(invoice.status).toBe('DRAFT');
-    expect(invoice.id).toBe('uid-123');
-    expect(invoice.items[0].id).toBe('uid-123');
+    expect(invoice.id).toBe('550e8400-e29b-41d4-a716-446655440000');
+    expect(invoice.items[0].id).toBe('550e8400-e29b-41d4-a716-446655440000');
     // invoiceNumber contains year+month; avoid exact month assertion because of timezone differences
     expect(invoice.invoiceNumber).toMatch(/^INV-2025\d{2}-\d{4}$/);
     expect(uuidMock).toHaveBeenCalled();

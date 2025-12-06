@@ -9,7 +9,7 @@ describe('pdf helper', () => {
   });
 
   it('renderInvoiceHtml produces HTML and contains invoice number and items', async () => {
-    const { renderInvoiceHtml } = await vi.importActual('../pdf.js');
+    const { renderInvoiceHtml } = await vi.importActual<any>('../pdf.js');
     const invoice = {
       id: 'inv-1',
       invoiceNumber: 'INV-2025-0001',
@@ -50,7 +50,7 @@ describe('pdf helper', () => {
 
     vi.doMock('child_process', () => ({ spawn: spawnMock }));
 
-    const { htmlToPdf } = await vi.importActual('../pdf.js');
+    const { htmlToPdf } = await vi.importActual<any>('../pdf.js');
     const buf = await htmlToPdf('<html></html>');
     expect(Buffer.isBuffer(buf)).toBe(true);
     expect(buf.indexOf(Buffer.from('%PDF'))).toBeGreaterThanOrEqual(0);
@@ -73,7 +73,7 @@ describe('pdf helper', () => {
     // Export a default object with launch() to match how dynamic import resolves default
     vi.doMock('puppeteer', () => ({ default: { launch: vi.fn(async () => browser) } }));
 
-    const { htmlToPdf } = await vi.importActual('../pdf.js');
+    const { htmlToPdf } = await vi.importActual<any>('../pdf.js');
     const buf = await htmlToPdf('<html></html>');
     expect(Buffer.isBuffer(buf)).toBe(true);
     expect(buf.indexOf(Buffer.from('%PDF-FALLBACK'))).toBeGreaterThanOrEqual(0);

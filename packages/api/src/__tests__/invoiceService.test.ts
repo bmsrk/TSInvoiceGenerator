@@ -18,7 +18,7 @@ vi.mock('@invoice/shared', () => ({
   getDueDateFromPaymentTerms: () => new Date('2025-01-01T00:00:00Z'),
 }));
 
-import prisma from '../db.js';
+import prisma from '../database.js';
 import * as service from '../services/invoiceService';
 
 beforeEach(() => {

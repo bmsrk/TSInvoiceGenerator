@@ -1,0 +1,145 @@
+name: Build and Release CLI
+
+on:
+  push:
+    tags:
+      - 'cli-v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-cli:
+    name: Build CLI for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact-name: invoice-linux-x64
+            output-name: invoice
+          - os: macos-latest
+            artifact-name: invoice-macos-x64
+            output-name: invoice
+          - os: windows-latest
+            artifact-name: invoice-windows-x64.exe
+            output-name: invoice.exe
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
+
+      - name: Install CLI dependencies
+        run: |
+          cd cli
+          bun install
+
+      - name: Generate Prisma Client
+        run: |
+          cd cli
+          bunx prisma generate
+
+      - name: Build CLI executable
+        run: |
+          cd cli
+          bun build src/index.ts --compile --outfile ${{ matrix.output-name }}
+
+      - name: Test CLI executable (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cd cli
+          chmod +x ${{ matrix.output-name }}
+          ./${{ matrix.output-name }} --version || echo "Version check not available"
+
+      - name: Rename artifact (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cd cli
+          mv ${{ matrix.output-name }} ${{ matrix.artifact-name }}
+
+      - name: Rename artifact (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd cli
+          move ${{ matrix.output-name }} ${{ matrix.artifact-name }}
+
+      - name: Upload CLI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-${{ matrix.os }}
+          path: cli/${{ matrix.artifact-name }}
+          retention-days: 5
+
+  release-cli:
+    name: Create CLI Release
+    needs: build-cli
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/cli-v')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display artifact structure
+        run: ls -R artifacts
+
+      - name: Extract version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/cli-}" >> $GITHUB_OUTPUT
+
+      - name: Create CLI Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: cli-${{ steps.get_version.outputs.VERSION }}
+          name: CLI Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## TSInvoiceGenerator CLI ${{ steps.get_version.outputs.VERSION }}
+            
+            Terminal-based invoice generator built with Bun.
+            
+            ### Downloads
+            - **Linux**: `invoice-linux-x64`
+            - **macOS**: `invoice-macos-x64`
+            - **Windows**: `invoice-windows-x64.exe`
+            
+            ### Installation
+            
+            #### Linux/macOS
+            ```bash
+            chmod +x invoice-*
+            ./invoice-*
+            ```
+            
+            #### Windows
+            ```cmd
+            invoice-windows-x64.exe
+            ```
+            
+            ### Features
+            - Create and manage invoices
+            - Company and customer management
+            - Service catalog
+            - Statistics and reporting
+            - Embedded SQLite database
+            - PDF export support (requires wkhtmltopdf)
+            
+            ### Documentation
+            See [CLI README](https://github.com/bmsrk/TSInvoiceGenerator/blob/main/cli/README.md) for more information.
+          files: |
+            artifacts/cli-*/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

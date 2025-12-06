@@ -57,7 +57,6 @@ import * as customerService from '../services/customerService.js';
 import * as serviceService from '../services/serviceService.js';
 import * as invoiceService from '../services/invoiceService.js';
 import { seedDatabase } from '../services/seed.js';
-import { seedDatabase } from '../services/seed.js';
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -274,7 +273,7 @@ describe('server routes', () => {
   // Invoices endpoints: list, get, create, patch, delete
   it('GET /api/invoices returns list and GET by id returns invoice or 404', async () => {
     (invoiceService.getAllInvoices as any).mockResolvedValueOnce([{ id: 'inv1' }]);
-    (invoiceService.toApiFormat as any).mockImplementation(i => i);
+    (invoiceService.toApiFormat as any).mockImplementation((i: any) => i);
     let res = await doRequest(app, 'GET', '/api/invoices');
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual([{ id: 'inv1' }]);
@@ -284,7 +283,7 @@ describe('server routes', () => {
     expect(res.status).toBe(404);
 
     (invoiceService.getInvoiceById as any).mockResolvedValueOnce({ id: 'inv2' });
-    (invoiceService.toApiFormat as any).mockImplementationOnce(i => ({ id: i.id }));
+    (invoiceService.toApiFormat as any).mockImplementationOnce((i: any) => ({ id: i.id }));
     res = await doRequest(app, 'GET', '/api/invoices/inv2');
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ id: 'inv2' });
@@ -292,7 +291,7 @@ describe('server routes', () => {
 
   it('POST /api/invoices returns created invoice or 400 on error', async () => {
     (invoiceService.createInvoice as any).mockResolvedValueOnce({ id: 'new' });
-    (invoiceService.toApiFormat as any).mockImplementation(i => i);
+    (invoiceService.toApiFormat as any).mockImplementation((i: any) => i);
     let res = await doRequest(app, 'POST', '/api/invoices', { items: [] });
     expect(res.status).toBe(201);
 
@@ -303,7 +302,7 @@ describe('server routes', () => {
 
   it('PATCH /api/invoices/:id/status updates or returns 404', async () => {
     (invoiceService.updateInvoiceStatus as any).mockResolvedValueOnce({ id: 'x' });
-    (invoiceService.toApiFormat as any).mockImplementation(i => i);
+    (invoiceService.toApiFormat as any).mockImplementation((i: any) => i);
     let res = await doRequest(app, 'PATCH', '/api/invoices/x/status', { status: 'PAID' });
     expect(res.status).toBe(200);
 
