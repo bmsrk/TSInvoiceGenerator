@@ -2,24 +2,21 @@
   "name": "ts-invoice-generator",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": ["packages/*", "cli"],
   "scripts": {
-    "dev": "npm run dev:api & npm run dev:web",
-    "dev:api": "npm run dev --workspace=@invoice/api",
-    "dev:web": "npm run dev --workspace=@invoice/web",
+    "dev:cli": "cd cli && bun run index.ts",
+    "build:cli": "cd cli && bun build index.ts --compile --outfile invoice",
     "dev:electron": "npm run build:shared && npm run build:api && npm run dev --workspace=@invoice/electron",
-    "build": "npm run build --workspaces",
-    "build:shared": "npm run build --workspace=@invoice/shared",
-    "build:api": "npm run build --workspace=@invoice/api",
     "build:electron": "npm run build:shared && npm run build:api && npm run build:web && npm run build --workspace=@invoice/electron",
-    "build:web": "npm run build --workspace=@invoice/web",
     "package:electron": "npm run build:electron && npm run package --workspace=@invoice/electron",
     "package:win": "npm run build:electron && npm run package:win --workspace=@invoice/electron",
     "package:mac": "npm run build:electron && npm run package:mac --workspace=@invoice/electron",
     "package:linux": "npm run build:electron && npm run package:linux --workspace=@invoice/electron",
-    "lint": "npm run lint --workspaces --if-present",
+    "build:shared": "npm run build --workspace=@invoice/shared",
+    "build:api": "npm run build --workspace=@invoice/api",
+    "build:web": "npm run build --workspace=@invoice/web",
     "test": "npm run test --workspaces --if-present",
-    "clean": "rm -rf packages/*/node_modules packages/*/dist node_modules"
+    "clean": "rm -rf packages/*/node_modules packages/*/dist cli/node_modules node_modules"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

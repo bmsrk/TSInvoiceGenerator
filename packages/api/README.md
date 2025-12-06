@@ -1,36 +1,48 @@
-# @invoice/api — PDF Export
+# @invoice/api — Embedded API Server
 
-This package (the API server) exposes an endpoint to generate high-quality PDF invoices.
+This package provides the Hono-based API server that is embedded in the Electron desktop application. It handles database operations and PDF generation.
 
-## Endpoint
+## Purpose
+
+The API is **not meant to run standalone**. It serves as:
+- Embedded server in the Electron app
+- Shared business logic layer
+- PDF generation service
+
+## PDF Export
+
+### Endpoint
 
 - GET /api/invoices/:id/pdf — returns `application/pdf` with the invoice rendered as a printable PDF.
 
-## How it works
+### How it works
 
-1. The API renders a small invoice HTML template server-side.
-2. It tries to run wkhtmltopdf to convert the HTML ➜ PDF (recommended for accurate print/CSS support).
-3. If wkhtmltopdf isn't available, the API falls back to using Puppeteer (Chromium) to render the same HTML to a PDF.
+1. The API renders an invoice HTML template server-side
+2. Tries to use wkhtmltopdf for high-quality PDF conversion
+3. Falls back to Puppeteer (Chromium) if wkhtmltopdf is unavailable
 
-## Runtime requirements & tips
+### Requirements
 
-- Best results: install `wkhtmltopdf` on your host (Windows/macOS/Linux). Many distributions provide binary packages or you can use an npm helper like `wkhtmltopdf-installer`.
-- Fallback: the server will fall back to Puppeteer/Chromium automatically if `wkhtmltopdf` fails.
-- On CI or servers where installing a native binary is hard, Puppeteer provides a reliable fallback (but larger disk usage).
+- **Best results**: wkhtmltopdf installed on the system
+- **Fallback**: Puppeteer (included as dependency)
+- Electron builds include wkhtmltopdf binary via `prepare-wk` script
 
-## Local testing
+## For Developers
 
-If you want to test PDF generation locally:
+### Testing the API
 
-1. Start your API server (e.g., `npm run dev:api` from the repo root or `cd packages/api && npm run dev`).
-2. Call GET `/api/invoices/<id>/pdf` and open or save the response as a PDF file.
-
-Example (curl):
+The API is automatically started by the Electron app. For development:
 
 ```bash
-curl -f -o invoice.pdf http://localhost:3001/api/invoices/INV-2024-0001/pdf
+# From root - runs Electron with embedded API
+npm run dev:electron
 ```
 
-## Notes for Electron packaging
+The API will be available at `http://localhost:3001` when Electron is running.
 
-When building the Electron bundle, make sure the target platform has either wkhtmltopdf installed, or include Puppeteer dependencies (Chromium) in the packaged build. The API includes both options so the app will work on a machine without wkhtmltopdf, but installing the binary will yield better results and smaller packaged sizes.
+### Testing PDF Generation
+
+```bash
+# With Electron running, test PDF endpoint
+curl -f -o invoice.pdf http://localhost:3001/api/invoices/<invoice-id>/pdf
+```
