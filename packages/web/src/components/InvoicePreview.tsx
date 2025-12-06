@@ -206,7 +206,7 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
       )}
 
       {/* Status Badge and Export Button */}
-      <div style={{ padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f9fafb', borderTop: '1px solid #e5e7eb' }}>
+      <div data-html2canvas-ignore="true" style={{ padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f9fafb', borderTop: '1px solid #e5e7eb' }}>
         <div>
           <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Payment Terms: </span>
           <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
@@ -221,7 +221,6 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
           <button
             onClick={handleExportPDF}
             disabled={exporting}
-            data-html2canvas-ignore="true"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
