@@ -1,6 +1,37 @@
 # Invoice Generator
 
-A modern, full-stack TypeScript invoice generator built with Node.js, Hono, React, and SQLite. Features persistent storage, CRUD management for companies, customers, and services, PDF export, and **desktop application** via Electron.
+A modern, full-stack TypeScript invoice generator with **multiple interfaces**:
+- 🖥️ **CLI with TUI** - Single-file command-line interface with interactive Terminal UI (Built with **Bun**)
+- 🌐 **Web Application** - React-based web interface (Built with Node.js, Hono, React, and SQLite)
+- 💻 **Desktop App** - Standalone executable via Electron (Windows, macOS, Linux)
+
+## 🚀 Quick Start - CLI with TUI (Recommended)
+
+The fastest way to get started is with the new **Bun-based CLI**:
+
+```bash
+# Install Bun (if not already installed)
+curl -fsSL https://bun.sh/install | bash
+
+# Navigate to CLI directory
+cd cli
+
+# Install dependencies
+bun install
+
+# Set up database
+bunx prisma generate
+bunx prisma migrate dev --name init
+
+# Run the CLI
+bun run index.ts
+
+# Or build a standalone executable
+bun build index.ts --compile --outfile invoice
+./invoice
+```
+
+See [cli/README.md](cli/README.md) for full CLI documentation.
 
 ## 📸 Screenshots
 
@@ -15,13 +46,15 @@ A modern, full-stack TypeScript invoice generator built with Node.js, Hono, Reac
 
 ## 🚀 Features
 
-- **Modern Stack**: Node.js, Hono API, React frontend, SQLite database
-- **Desktop App**: Standalone executable via Electron (Windows, macOS, Linux)
+- **🖥️ CLI with TUI**: Single-file command-line interface with beautiful Terminal UI (Built with Bun)
+- **💻 Desktop App**: Standalone executable via Electron (Windows, macOS, Linux)
+- **🌐 Web Interface**: React-based modern dark theme UI
+- **Modern Stack**: Bun/Node.js, Hono API, React frontend, SQLite database
 - **Persistent Storage**: SQLite database with Prisma ORM
 - **CRUD Management**: Manage companies, customers, and services
 - **Decimal Support**: Hours and rates accept decimal values (e.g., 1.5 hours)
 - **Safe Money Calculations**: Avoids floating-point errors with proper rounding
-- **PDF Export**: Export invoices to PDF (export button hidden from PDF output)
+- **PDF Export**: Export invoices to PDF (web version)
 - **Dark Mode UI**: Beautiful, modern dark theme interface
 - **Type-Safe**: Full TypeScript support across all packages
 - **Docker Support**: Run with Docker Compose for easy deployment
@@ -31,6 +64,10 @@ A modern, full-stack TypeScript invoice generator built with Node.js, Hono, Reac
 
 ```
 ts-invoice-generator/
+├── cli/                  # NEW: Bun-based single-file CLI with TUI
+│   ├── index.ts         # Complete CLI in one file
+│   ├── prisma/          # Database schema
+│   └── package.json     # Bun dependencies
 ├── packages/
 │   ├── shared/          # Shared types, utilities, and money calculations
 │   ├── api/             # Hono-based REST API with Prisma/SQLite
@@ -47,13 +84,49 @@ ts-invoice-generator/
 
 ## 🛠️ Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18 or higher)
+- [Bun](https://bun.sh/) v1.0+ (for CLI)
+- [Node.js](https://nodejs.org/) v18+ (for web/electron)
 - npm (comes with Node.js)
 - [Docker](https://www.docker.com/) (optional, for containerized deployment)
 
 ## 🏁 Getting Started
 
-### Option 1: Desktop Application (Electron)
+### Option 1: CLI with TUI (NEW - Recommended ⭐)
+
+The simplest and fastest way to use the invoice generator:
+
+```bash
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+
+# Navigate to CLI directory
+cd cli
+
+# Install dependencies
+bun install
+
+# Set up database
+bunx prisma generate
+bunx prisma migrate dev --name init
+
+# Run the CLI with interactive TUI
+bun run index.ts
+
+# Or build and run standalone executable
+bun build index.ts --compile --outfile invoice
+./invoice
+```
+
+Features:
+- 📋 List and view invoices
+- ✨ Create new invoices interactively
+- 🏢 Manage companies, customers, and services
+- 📊 View statistics dashboard
+- 🌱 Auto-seed with sample data
+
+See [cli/README.md](cli/README.md) for detailed CLI documentation.
+
+### Option 2: Desktop Application (Electron)
 
 Build a standalone executable for your platform:
 
@@ -70,7 +143,7 @@ npm run package:linux        # Build for Linux (.AppImage, .deb)
 
 The packaged application will be in `packages/electron/release/`.
 
-### Option 2: Local Development
+### Option 3: Local Development (Web + API)
 
 #### 1. Install Dependencies
 
@@ -110,7 +183,7 @@ npm run dev:web
 - **Web UI**: http://localhost:5173
 - **API**: http://localhost:3001
 
-### Option 2: Docker Deployment
+### Option 4: Docker Deployment
 
 #### 1. Build and run with Docker Compose
 

@@ -146,3 +146,7 @@ vite.config.ts.timestamp-*
 
 # Prisma generated files - can be regenerated with `npx prisma generate`
 packages/api/src/generated/
+
+# CLI compiled binary - can be rebuilt with `bun build --compile`
+cli/invoice
+cli/prisma/migrations/
