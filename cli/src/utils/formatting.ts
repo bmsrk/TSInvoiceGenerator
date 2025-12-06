@@ -32,6 +32,14 @@ export function calculateLineTotal(quantity: number, unitPrice: number, taxRate:
 /**
  * Escape HTML special characters to prevent injection
  */
+const HTML_ESCAPE_MAP: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
+
 export function escapeHtml(input: unknown): string {
-  return String(input).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m] || m));
+  return String(input).replace(/[&<>"']/g, (m) => HTML_ESCAPE_MAP[m] || m);
 }
