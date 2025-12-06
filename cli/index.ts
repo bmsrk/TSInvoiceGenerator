@@ -483,9 +483,19 @@ async function createInvoiceTUI(): Promise<void> {
   const lastInvoice = await prisma.invoice.findFirst({
     orderBy: { createdAt: 'desc' },
   });
-  const nextNumber = lastInvoice
-    ? `INV-${new Date().getFullYear()}-${String(parseInt(lastInvoice.invoiceNumber.split('-')[2] || '0') + 1).padStart(4, '0')}`
-    : `INV-${new Date().getFullYear()}-0001`;
+  
+  // Generate next invoice number with validation
+  let nextNumber = `INV-${new Date().getFullYear()}-0001`;
+  if (lastInvoice && lastInvoice.invoiceNumber) {
+    const parts = lastInvoice.invoiceNumber.split('-');
+    if (parts.length === 3 && !isNaN(parseInt(parts[2]))) {
+      const nextNum = parseInt(parts[2]) + 1;
+      nextNumber = `INV-${new Date().getFullYear()}-${String(nextNum).padStart(4, '0')}`;
+    }
+  }
+  
+  // Days to milliseconds constant
+  const DAYS_30_MS = 30 * 24 * 60 * 60 * 1000;
 
   const { invoiceNumber, dueDate, paymentTerms } = await inquirer.prompt([
     {
@@ -498,7 +508,7 @@ async function createInvoiceTUI(): Promise<void> {
       type: 'input',
       name: 'dueDate',
       message: 'Due date (YYYY-MM-DD):',
-      default: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      default: new Date(Date.now() + DAYS_30_MS)
         .toISOString()
         .split('T')[0],
     },
