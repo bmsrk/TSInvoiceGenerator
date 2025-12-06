@@ -166,6 +166,7 @@ export interface Service {
   id: string;
   description: string;
   defaultRate: number;
+  companyId: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -173,10 +174,14 @@ export interface Service {
 export interface CreateServiceInput {
   description: string;
   defaultRate: number;
+  companyId: string;
 }
 
-export async function fetchServices(): Promise<Service[]> {
-  const response = await fetch(`${API_BASE}/services`);
+export async function fetchServices(companyId?: string): Promise<Service[]> {
+  const url = companyId 
+    ? `${API_BASE}/services?companyId=${encodeURIComponent(companyId)}`
+    : `${API_BASE}/services`;
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error('Failed to fetch services');
   }

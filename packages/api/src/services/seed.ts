@@ -87,17 +87,18 @@ export async function seedDatabase(): Promise<void> {
 
   console.log('✅ Created sample customers');
 
-  // Create sample services
+  // Create sample services for each company
   await prisma.service.createMany({
     data: [
-      { description: 'Web Development', defaultRate: 150.00 },
-      { description: 'UI/UX Design', defaultRate: 120.00 },
-      { description: 'Project Management', defaultRate: 100.00 },
-      { description: 'Consulting', defaultRate: 175.00 },
-      { description: 'Code Review', defaultRate: 125.00 },
-      { description: 'Technical Writing', defaultRate: 85.00 },
-      { description: 'Database Design', defaultRate: 140.00 },
-      { description: 'API Development', defaultRate: 160.00 },
+      // Services for Acme Corp
+      { description: 'Web Development', defaultRate: 150.00, companyId: acmeCorp.id },
+      { description: 'UI/UX Design', defaultRate: 120.00, companyId: acmeCorp.id },
+      { description: 'Project Management', defaultRate: 100.00, companyId: acmeCorp.id },
+      { description: 'Consulting', defaultRate: 175.00, companyId: acmeCorp.id },
+      { description: 'Code Review', defaultRate: 125.00, companyId: acmeCorp.id },
+      { description: 'Technical Writing', defaultRate: 85.00, companyId: acmeCorp.id },
+      { description: 'Database Design', defaultRate: 140.00, companyId: acmeCorp.id },
+      { description: 'API Development', defaultRate: 160.00, companyId: acmeCorp.id },
     ],
   });
 
