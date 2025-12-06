@@ -1,0 +1,25 @@
+{
+  "name": "invoice-cli",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "invoice": "./index.ts"
+  },
+  "scripts": {
+    "dev": "bun run index.ts",
+    "build": "bun build index.ts --compile --outfile invoice",
+    "start": "./invoice"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "commander": "^12.0.0",
+    "chalk": "^5.3.0",
+    "inquirer": "^12.3.0",
+    "table": "^6.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "prisma": "^5.22.0",
+    "typescript": "^5.3.3"
+  }
+}

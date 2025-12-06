@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Company profiles (your business/businesses)
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  street    String
+  city      String
+  state     String
+  zipCode   String
+  country   String
+  taxId     String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  invoices  Invoice[]
+}
+
+// Customer list
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  street    String
+  city      String
+  state     String
+  zipCode   String
+  country   String
+  taxId     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  invoices  Invoice[]
+}
+
+// Service catalog
+model Service {
+  id           String   @id @default(uuid())
+  description  String
+  defaultRate  Float    // Stored as decimal (rate per hour)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Invoice header
+model Invoice {
+  id                 String        @id @default(uuid())
+  invoiceNumber      String        @unique
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  dueDate            DateTime
+  status             String        @default("DRAFT") // DRAFT, PENDING, PAID, OVERDUE, CANCELLED
+  currency           String        @default("USD")
+  paymentTerms       String        @default("NET_30")
+  notes              String?
+  termsAndConditions String?
+  
+  // Relations
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  items      InvoiceLine[]
+}
+
+// Invoice line items
+model InvoiceLine {
+  id          String  @id @default(uuid())
+  description String
+  quantity    Float   // Can be decimal hours (e.g., 1.5)
+  unitPrice   Float   // Rate per unit/hour
+  taxRate     Float   @default(0) // Percentage
+  
+  // Relations
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
