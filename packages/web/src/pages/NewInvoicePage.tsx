@@ -71,17 +71,22 @@ export default function NewInvoicePage() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    // Reload services when company changes
+    if (companyId) {
+      loadServicesForCompany(companyId);
+    }
+  }, [companyId]);
+
   async function loadData() {
     try {
       setLoading(true);
-      const [companiesData, customersData, servicesData] = await Promise.all([
+      const [companiesData, customersData] = await Promise.all([
         fetchCompanies(),
         fetchCustomers(),
-        fetchServices(),
       ]);
       setCompanies(companiesData);
       setCustomers(customersData);
-      setServices(servicesData);
 
       // Set default company
       const defaultCompany = companiesData.find(c => c.isDefault) || companiesData[0];
@@ -93,6 +98,15 @@ export default function NewInvoicePage() {
       setError('Failed to load data. Please refresh the page.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadServicesForCompany(selectedCompanyId: string) {
+    try {
+      const servicesData = await fetchServices(selectedCompanyId);
+      setServices(servicesData);
+    } catch (err) {
+      console.error('Failed to load services:', err);
     }
   }
 

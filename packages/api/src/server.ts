@@ -130,7 +130,8 @@ export function createApp(): Hono {
   // ============ Service Routes ============
 
   app.get('/api/services', async (c) => {
-    const services = await serviceService.getAllServices();
+    const companyId = c.req.query('companyId');
+    const services = await serviceService.getAllServices(companyId);
     return c.json(services);
   });
 

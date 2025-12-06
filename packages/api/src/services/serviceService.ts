@@ -4,6 +4,7 @@ import type { Service } from '@prisma/client';
 export interface CreateServiceInput {
   description: string;
   defaultRate: number;
+  companyId: string;
 }
 
 export interface UpdateServiceInput extends Partial<CreateServiceInput> {
@@ -11,10 +12,11 @@ export interface UpdateServiceInput extends Partial<CreateServiceInput> {
 }
 
 /**
- * Get all services
+ * Get all services, optionally filtered by company
  */
-export async function getAllServices(): Promise<Service[]> {
+export async function getAllServices(companyId?: string): Promise<Service[]> {
   return prisma.service.findMany({
+    where: companyId ? { companyId } : undefined,
     orderBy: { description: 'asc' },
   });
 }
