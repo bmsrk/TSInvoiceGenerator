@@ -6,7 +6,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { Command } from 'commander';
-import inquirer from 'inquirer';
+import prompts from 'prompts';
 import chalk from 'chalk';
 import { table } from 'table';
 
@@ -185,20 +185,20 @@ async function seedDatabase(): Promise<void> {
 // ===== TUI Menus =====
 
 async function mainMenu(): Promise<void> {
-  const { action } = await inquirer.prompt([
+  const { action } = await prompts([
     {
-      type: 'list',
+      type: 'select',
       name: 'action',
       message: 'What would you like to do?',
       choices: [
-        { name: '📋 List Invoices', value: 'list-invoices' },
-        { name: '✨ Create Invoice', value: 'create-invoice' },
-        { name: '🏢 Manage Companies', value: 'manage-companies' },
-        { name: '👥 Manage Customers', value: 'manage-customers' },
-        { name: '🛠️  Manage Services', value: 'manage-services' },
-        { name: '📊 View Statistics', value: 'stats' },
-        { name: '🌱 Seed Database', value: 'seed' },
-        { name: '❌ Exit', value: 'exit' },
+        { title: '📋 List Invoices', value: 'list-invoices' },
+        { title: '✨ Create Invoice', value: 'create-invoice' },
+        { title: '🏢 Manage Companies', value: 'manage-companies' },
+        { title: '👥 Manage Customers', value: 'manage-customers' },
+        { title: '🛠️  Manage Services', value: 'manage-services' },
+        { title: '📊 View Statistics', value: 'stats' },
+        { title: '🌱 Seed Database', value: 'seed' },
+        { title: '❌ Exit', value: 'exit' },
       ],
     },
   ]);
@@ -278,16 +278,16 @@ async function listInvoices(): Promise<void> {
 
   console.log(table(data));
 
-  const { action } = await inquirer.prompt([
+  const { action } = await prompts([
     {
-      type: 'list',
+      type: 'select',
       name: 'action',
       message: 'What would you like to do?',
       choices: [
-        { name: '👁️  View Invoice Details', value: 'view' },
-        { name: '🔄 Update Invoice Status', value: 'update-status' },
-        { name: '🗑️  Delete Invoice', value: 'delete' },
-        { name: '⬅️  Back to Main Menu', value: 'back' },
+        { title: '👁️  View Invoice Details', value: 'view' },
+        { title: '🔄 Update Invoice Status', value: 'update-status' },
+        { title: '🗑️  Delete Invoice', value: 'delete' },
+        { title: '⬅️  Back to Main Menu', value: 'back' },
       ],
     },
   ]);
@@ -295,9 +295,9 @@ async function listInvoices(): Promise<void> {
   if (action === 'back') return;
 
   if (action === 'view') {
-    const { invoiceId } = await inquirer.prompt([
+    const { invoiceId } = await prompts([
       {
-        type: 'list',
+        type: 'select',
         name: 'invoiceId',
         message: 'Select an invoice:',
         choices: invoices.map((inv) => ({
@@ -308,9 +308,9 @@ async function listInvoices(): Promise<void> {
     ]);
     await viewInvoiceDetails(invoiceId);
   } else if (action === 'update-status') {
-    const { invoiceId } = await inquirer.prompt([
+    const { invoiceId } = await prompts([
       {
-        type: 'list',
+        type: 'select',
         name: 'invoiceId',
         message: 'Select an invoice:',
         choices: invoices.map((inv) => ({
@@ -321,9 +321,9 @@ async function listInvoices(): Promise<void> {
     ]);
     await updateInvoiceStatus(invoiceId);
   } else if (action === 'delete') {
-    const { invoiceId } = await inquirer.prompt([
+    const { invoiceId } = await prompts([
       {
-        type: 'list',
+        type: 'select',
         name: 'invoiceId',
         message: 'Select an invoice to delete:',
         choices: invoices.map((inv) => ({
@@ -403,9 +403,9 @@ async function viewInvoiceDetails(invoiceId: string): Promise<void> {
 }
 
 async function updateInvoiceStatus(invoiceId: string): Promise<void> {
-  const { status } = await inquirer.prompt([
+  const { status } = await prompts([
     {
-      type: 'list',
+      type: 'select',
       name: 'status',
       message: 'Select new status:',
       choices: ['DRAFT', 'PENDING', 'PAID', 'OVERDUE', 'CANCELLED'],
@@ -421,12 +421,12 @@ async function updateInvoiceStatus(invoiceId: string): Promise<void> {
 }
 
 async function deleteInvoice(invoiceId: string): Promise<void> {
-  const { confirm } = await inquirer.prompt([
+  const { confirm } = await prompts([
     {
       type: 'confirm',
       name: 'confirm',
       message: 'Are you sure you want to delete this invoice?',
-      default: false,
+      initial: false,
     },
   ]);
 
@@ -448,9 +448,9 @@ async function createInvoiceTUI(): Promise<void> {
     return;
   }
 
-  const { companyId } = await inquirer.prompt([
+  const { companyId } = await prompts([
     {
-      type: 'list',
+      type: 'select',
       name: 'companyId',
       message: 'Select your company:',
       choices: companies.map((c) => ({
@@ -467,9 +467,9 @@ async function createInvoiceTUI(): Promise<void> {
     return;
   }
 
-  const { customerId } = await inquirer.prompt([
+  const { customerId } = await prompts([
     {
-      type: 'list',
+      type: 'select',
       name: 'customerId',
       message: 'Select customer:',
       choices: customers.map((c) => ({
@@ -497,27 +497,27 @@ async function createInvoiceTUI(): Promise<void> {
   // Days to milliseconds constant
   const DAYS_30_MS = 30 * 24 * 60 * 60 * 1000;
 
-  const { invoiceNumber, dueDate, paymentTerms } = await inquirer.prompt([
+  const { invoiceNumber, dueDate, paymentTerms } = await prompts([
     {
       type: 'input',
       name: 'invoiceNumber',
       message: 'Invoice number:',
-      default: nextNumber,
+      initial: nextNumber,
     },
     {
       type: 'input',
       name: 'dueDate',
       message: 'Due date (YYYY-MM-DD):',
-      default: new Date(Date.now() + DAYS_30_MS)
+      initial: new Date(Date.now() + DAYS_30_MS)
         .toISOString()
         .split('T')[0],
     },
     {
-      type: 'list',
+      type: 'select',
       name: 'paymentTerms',
       message: 'Payment terms:',
       choices: ['NET_15', 'NET_30', 'NET_45', 'NET_60', 'DUE_ON_RECEIPT'],
-      default: 'NET_30',
+      initial: 'NET_30',
     },
   ]);
 
@@ -531,16 +531,16 @@ async function createInvoiceTUI(): Promise<void> {
 
   let addingItems = true;
   while (addingItems) {
-    const { action } = await inquirer.prompt([
+    const { action } = await prompts([
       {
-        type: 'list',
+        type: 'select',
         name: 'action',
         message: 'Line items:',
         choices: [
-          { name: '➕ Add Line Item', value: 'add' },
-          { name: '📋 Add from Services', value: 'add-service' },
+          { title: '➕ Add Line Item', value: 'add' },
+          { title: '📋 Add from Services', value: 'add-service' },
           ...(items.length > 0
-            ? [{ name: '✅ Finish and Create Invoice', value: 'finish' }]
+            ? [{ title: '✅ Finish and Create Invoice', value: 'finish' }]
             : []),
         ],
       },
@@ -549,30 +549,37 @@ async function createInvoiceTUI(): Promise<void> {
     if (action === 'finish') {
       addingItems = false;
     } else if (action === 'add') {
-      const item = await inquirer.prompt([
+      const itemResponse = await prompts([
         {
           type: 'input',
           name: 'description',
           message: 'Description:',
         },
         {
-          type: 'number',
+          type: 'input',
           name: 'quantity',
           message: 'Quantity (can be decimal):',
-          default: 1,
+          initial: 1,
         },
         {
-          type: 'number',
+          type: 'input',
           name: 'unitPrice',
           message: 'Unit price:',
         },
         {
-          type: 'number',
+          type: 'input',
           name: 'taxRate',
           message: 'Tax rate (%):',
-          default: 0,
+          initial: 0,
         },
       ]);
+      // convert numeric fields
+      const item = {
+        description: itemResponse.description,
+        quantity: parseFloat(itemResponse.quantity as any),
+        unitPrice: parseFloat(itemResponse.unitPrice as any),
+        taxRate: parseFloat(itemResponse.taxRate as any),
+      };
       items.push(item);
       console.log(chalk.green('✅ Item added\n'));
     } else if (action === 'add-service') {
@@ -582,9 +589,9 @@ async function createInvoiceTUI(): Promise<void> {
         continue;
       }
 
-      const { serviceId } = await inquirer.prompt([
+      const { serviceId } = await prompts([
         {
-          type: 'list',
+          type: 'select',
           name: 'serviceId',
           message: 'Select service:',
           choices: services.map((s) => ({
@@ -595,26 +602,29 @@ async function createInvoiceTUI(): Promise<void> {
       ]);
 
       const service = services.find((s) => s.id === serviceId)!;
-      const { quantity, unitPrice, taxRate } = await inquirer.prompt([
+      const numResponse = await prompts([
         {
-          type: 'number',
+          type: 'input',
           name: 'quantity',
           message: 'Hours/Quantity:',
-          default: 1,
+          initial: 1,
         },
         {
-          type: 'number',
+          type: 'input',
           name: 'unitPrice',
           message: 'Rate:',
-          default: service.defaultRate,
+          initial: service.defaultRate,
         },
         {
-          type: 'number',
+          type: 'input',
           name: 'taxRate',
           message: 'Tax rate (%):',
-          default: 0,
+          initial: 0,
         },
       ]);
+      const quantity = parseFloat(numResponse.quantity as any);
+      const unitPrice = parseFloat(numResponse.unitPrice as any);
+      const taxRate = parseFloat(numResponse.taxRate as any);
 
       items.push({
         description: service.description,
@@ -686,17 +696,17 @@ async function manageCompanies(): Promise<void> {
     console.log(table(data));
   }
 
-  const { action } = await inquirer.prompt([
-    {
-      type: 'list',
+    const { action } = await prompts([
+      {
+        type: 'select',
       name: 'action',
       message: 'What would you like to do?',
       choices: [
-        { name: '➕ Create Company', value: 'create' },
+        { title: '➕ Create Company', value: 'create' },
         ...(companies.length > 0
-          ? [{ name: '🗑️  Delete Company', value: 'delete' }]
+          ? [{ title: '🗑️  Delete Company', value: 'delete' }]
           : []),
-        { name: '⬅️  Back to Main Menu', value: 'back' },
+        { title: '⬅️  Back to Main Menu', value: 'back' },
       ],
     },
   ]);
@@ -706,13 +716,13 @@ async function manageCompanies(): Promise<void> {
   if (action === 'create') {
     await createCompany();
   } else if (action === 'delete') {
-    const { companyId } = await inquirer.prompt([
-      {
-        type: 'list',
+    const { companyId } = await prompts([
+        {
+          type: 'select',
         name: 'companyId',
         message: 'Select company to delete:',
         choices: companies.map((c) => ({
-          name: `${c.name} (${c.email})`,
+          title: `${c.name} (${c.email})`,
           value: c.id,
         })),
       },
@@ -724,7 +734,7 @@ async function manageCompanies(): Promise<void> {
 async function createCompany(): Promise<void> {
   console.log(chalk.bold('\n➕ Create New Company\n'));
 
-  const input = await inquirer.prompt([
+  const input = await prompts([
     { type: 'input', name: 'name', message: 'Company name:' },
     { type: 'input', name: 'email', message: 'Email:' },
     { type: 'input', name: 'phone', message: 'Phone (optional):' },
@@ -747,7 +757,7 @@ async function createCompany(): Promise<void> {
 }
 
 async function deleteCompany(id: string): Promise<void> {
-  const { confirm } = await inquirer.prompt([
+  const { confirm } = await prompts([
     {
       type: 'confirm',
       name: 'confirm',
@@ -781,17 +791,17 @@ async function manageCustomers(): Promise<void> {
     console.log(table(data));
   }
 
-  const { action } = await inquirer.prompt([
+  const { action } = await prompts([
     {
-      type: 'list',
+      type: 'select',
       name: 'action',
       message: 'What would you like to do?',
       choices: [
-        { name: '➕ Create Customer', value: 'create' },
+        { title: '➕ Create Customer', value: 'create' },
         ...(customers.length > 0
-          ? [{ name: '🗑️  Delete Customer', value: 'delete' }]
+          ? [{ title: '🗑️  Delete Customer', value: 'delete' }]
           : []),
-        { name: '⬅️  Back to Main Menu', value: 'back' },
+        { title: '⬅️  Back to Main Menu', value: 'back' },
       ],
     },
   ]);
@@ -801,13 +811,13 @@ async function manageCustomers(): Promise<void> {
   if (action === 'create') {
     await createCustomer();
   } else if (action === 'delete') {
-    const { customerId } = await inquirer.prompt([
+    const { customerId } = await prompts([
       {
-        type: 'list',
+        type: 'select',
         name: 'customerId',
         message: 'Select customer to delete:',
         choices: customers.map((c) => ({
-          name: `${c.name} (${c.email})`,
+          title: `${c.name} (${c.email})`,
           value: c.id,
         })),
       },
@@ -819,7 +829,7 @@ async function manageCustomers(): Promise<void> {
 async function createCustomer(): Promise<void> {
   console.log(chalk.bold('\n➕ Create New Customer\n'));
 
-  const input = await inquirer.prompt([
+  const input = await prompts([
     { type: 'input', name: 'name', message: 'Customer name:' },
     { type: 'input', name: 'email', message: 'Email:' },
     { type: 'input', name: 'phone', message: 'Phone (optional):' },
@@ -827,7 +837,7 @@ async function createCustomer(): Promise<void> {
     { type: 'input', name: 'city', message: 'City:' },
     { type: 'input', name: 'state', message: 'State:' },
     { type: 'input', name: 'zipCode', message: 'ZIP code:' },
-    { type: 'input', name: 'country', message: 'Country:', default: 'USA' },
+    { type: 'input', name: 'country', message: 'Country:', initial: 'USA' },
     { type: 'input', name: 'taxId', message: 'Tax ID (optional):' },
   ]);
 
@@ -836,7 +846,7 @@ async function createCustomer(): Promise<void> {
 }
 
 async function deleteCustomer(id: string): Promise<void> {
-  const { confirm } = await inquirer.prompt([
+  const { confirm } = await prompts([
     {
       type: 'confirm',
       name: 'confirm',
@@ -870,17 +880,17 @@ async function manageServices(): Promise<void> {
     console.log(table(data));
   }
 
-  const { action } = await inquirer.prompt([
+  const { action } = await prompt([
     {
-      type: 'list',
+      type: 'select',
       name: 'action',
       message: 'What would you like to do?',
       choices: [
-        { name: '➕ Create Service', value: 'create' },
+        { title: '➕ Create Service', value: 'create' },
         ...(services.length > 0
-          ? [{ name: '🗑️  Delete Service', value: 'delete' }]
+          ? [{ title: '🗑️  Delete Service', value: 'delete' }]
           : []),
-        { name: '⬅️  Back to Main Menu', value: 'back' },
+        { title: '⬅️  Back to Main Menu', value: 'back' },
       ],
     },
   ]);
@@ -890,9 +900,9 @@ async function manageServices(): Promise<void> {
   if (action === 'create') {
     await createService();
   } else if (action === 'delete') {
-    const { serviceId } = await inquirer.prompt([
+    const { serviceId } = await prompts([
       {
-        type: 'list',
+        type: 'select',
         name: 'serviceId',
         message: 'Select service to delete:',
         choices: services.map((s) => ({
@@ -908,21 +918,24 @@ async function manageServices(): Promise<void> {
 async function createService(): Promise<void> {
   console.log(chalk.bold('\n➕ Create New Service\n'));
 
-  const input = await inquirer.prompt([
+  const input = await prompts([
     { type: 'input', name: 'description', message: 'Service description:' },
     {
-      type: 'number',
+      type: 'input',
       name: 'defaultRate',
       message: 'Default hourly rate:',
     },
   ]);
 
-  await prisma.service.create({ data: input });
+  // coerce numeric field
+  const createInput = { ...input, defaultRate: parseFloat(input.defaultRate as any) } as any;
+
+  await prisma.service.create({ data: createInput });
   console.log(chalk.green('\n✅ Service created successfully!\n'));
 }
 
 async function deleteService(id: string): Promise<void> {
-  const { confirm } = await inquirer.prompt([
+  const { confirm } = await prompts([
     {
       type: 'confirm',
       name: 'confirm',

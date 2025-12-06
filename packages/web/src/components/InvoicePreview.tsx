@@ -1,6 +1,4 @@
 import { useRef, useState } from 'react';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import type { Invoice } from '@invoice/shared';
 import {
   calculateInvoiceTotals,
@@ -27,47 +25,21 @@ export default function InvoicePreview({ invoice }: InvoicePreviewProps) {
   const [exporting, setExporting] = useState(false);
 
   const handleExportPDF = async () => {
-    if (!invoiceRef.current) return;
-
     setExporting(true);
     try {
-      // Use ignoreElements option to exclude export controls from the PDF
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        ignoreElements: (element) => {
-          // Ignore elements with data-html2canvas-ignore attribute
-          return element.hasAttribute('data-html2canvas-ignore');
-        },
-      });
+      // Request server-rendered PDF. The API will return `application/pdf`.
+      const resp = await fetch(`/api/invoices/${invoice.id}/pdf`);
+      if (!resp.ok) throw new Error('Failed to generate PDF');
 
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // Add first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      // Add additional pages if needed
-      while (heightLeft > 0) {
-        position -= pageHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      pdf.save(`${invoice.invoiceNumber}.pdf`);
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${invoice.invoiceNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Failed to export PDF:', error);
     } finally {

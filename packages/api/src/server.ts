@@ -10,6 +10,7 @@ import * as customerService from './services/customerService.js';
 import * as serviceService from './services/serviceService.js';
 import * as invoiceService from './services/invoiceService.js';
 import { seedDatabase } from './services/seed.js';
+import { htmlToPdf, renderInvoiceHtml } from './pdf.js';
 
 /**
  * Create and configure the Hono app with all routes
@@ -193,6 +194,33 @@ export function createApp(): Hono {
     }
     
     return c.json(invoiceService.toApiFormat(invoice));
+  });
+
+  // ============ Invoice PDF export ============
+
+  app.get('/api/invoices/:id/pdf', async (c) => {
+    const id = c.req.param('id');
+    const invoice = await invoiceService.getInvoiceById(id);
+
+    if (!invoice) {
+      return c.json({ error: 'Invoice not found' }, 404);
+    }
+
+    const apiInvoice = invoiceService.toApiFormat(invoice);
+
+    // Include totals so the template can show them if needed
+    const totals = calculateInvoiceTotals(apiInvoice.items);
+    apiInvoice.totals = totals;
+
+    const html = renderInvoiceHtml(apiInvoice);
+
+    try {
+      const pdfBuffer = await htmlToPdf(html);
+      return c.body(pdfBuffer, 200, { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${apiInvoice.invoiceNumber}.pdf"` });
+    } catch (err) {
+      console.error('PDF generation failed', err);
+      return c.json({ error: 'Failed to generate PDF' }, 500);
+    }
   });
 
   app.get('/api/invoices/:id/totals', async (c) => {
