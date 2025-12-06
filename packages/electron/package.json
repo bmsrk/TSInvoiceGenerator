@@ -17,7 +17,7 @@
     "@invoice/api": "*",
     "@invoice/shared": "*",
     "@prisma/client": "^5.22.0",
-    "wkhtmltopdf-installer": "^0.4.0",
+    "wkhtmltopdf-installer": "^0.3.2",
     "dotenv": "^17.2.3",
     "hono": "^4.0.0"
   },
