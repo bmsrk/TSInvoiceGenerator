@@ -1,4 +1,4 @@
-import prisma from '../db.js';
+import prisma from '../database.js';
 import type { Invoice, InvoiceLine } from '@prisma/client';
 import { generateInvoiceNumber, getDueDateFromPaymentTerms } from '@invoice/shared';
 import type { PaymentTerms, CurrencyCode } from '@invoice/shared';

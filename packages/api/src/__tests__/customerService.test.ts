@@ -12,7 +12,7 @@ vi.mock('../db.js', () => ({
   },
 }));
 
-import prisma from '../db.js';
+import prisma from '../database.js';
 import * as service from '../services/customerService';
 
 beforeEach(() => {

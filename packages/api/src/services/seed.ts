@@ -1,4 +1,4 @@
-import prisma from '../db.js';
+import prisma from '../database.js';
 
 /**
  * Seed the database with sample data
