@@ -1,10 +1,11 @@
 # Invoice Generator
 
-A modern, full-stack TypeScript invoice generator with **two local executable options**:
+A modern, full-stack TypeScript invoice generator with **three local executable options**:
 - 🖥️ **TUI CLI** - Single-file command-line interface with interactive Terminal UI (Bun-based)
-- 💻 **Desktop App** - Standalone Electron executable with embedded web UI (Windows, macOS, Linux)
+- 💻 **Desktop App (Electron)** - Standalone Electron executable with embedded web UI (Windows, macOS, Linux)
+- 🚀 **Desktop App (Tauri)** - Lightweight Tauri app with native performance (Windows, macOS, Linux)
 
-Both executables use **embedded SQLite databases** for complete offline functionality.
+All executables use **embedded SQLite databases** for complete offline functionality.
 
 ## 🚀 Quick Start
 
@@ -33,13 +34,13 @@ bun build index.ts --compile --outfile invoice
 
 See [cli/README.md](cli/README.md) for full CLI documentation.
 
-### Option 2: Electron Desktop App (GUI-based)
+### Option 2: Electron Desktop App (Full-featured GUI)
 
 The Electron app provides a full graphical interface with embedded API and database:
 
 ```bash
 # Install all dependencies (from root)
-npm install
+PUPPETEER_SKIP_DOWNLOAD=true npm install
 
 # Run in development mode
 npm run dev:electron
@@ -53,10 +54,31 @@ npm run package:linux        # Linux
 
 See [packages/electron/README.md](packages/electron/README.md) for Electron-specific documentation.
 
+### Option 3: Tauri Desktop App (Lightweight, Native Performance)
+
+The Tauri app offers the same features as Electron but with ~90% smaller file size and better performance:
+
+```bash
+# Install all dependencies (from root)
+PUPPETEER_SKIP_DOWNLOAD=true npm install
+
+# Prerequisites: Rust toolchain (see docs/TAURI.md)
+
+# Run in development mode
+npm run dev:tauri
+
+# Build for your platform
+npm run build:tauri
+```
+
+See [docs/TAURI.md](docs/TAURI.md) for detailed Tauri setup and build instructions.
+
 ## 🚀 Features
 
 - **🖥️ TUI CLI**: Single-file terminal interface with beautiful interactive menus (Bun-based)
-- **💻 Desktop App**: Cross-platform Electron app with embedded API and web UI
+- **💻 Desktop Apps**: Cross-platform GUI apps with embedded API and web UI
+  - **Electron**: Mature, feature-complete (~100MB)
+  - **Tauri**: Lightweight, fast, secure (~10-15MB)
 - **📦 Embedded Database**: SQLite with Prisma ORM - no external database needed
 - **🔌 Offline-First**: Both executables work completely offline
 - **Modern Stack**: TypeScript, Bun/Node.js, Hono API, React frontend
@@ -332,10 +354,12 @@ interface InvoiceItem {
 | `npm run build:cli` | Build CLI standalone executable |
 | `npm run dev:electron` | Run Electron app in development |
 | `npm run build:electron` | Build all packages for Electron |
-| `npm run package:electron` | Package for current platform |
-| `npm run package:win` | Package for Windows |
-| `npm run package:mac` | Package for macOS |
-| `npm run package:linux` | Package for Linux |
+| `npm run package:electron` | Package Electron for current platform |
+| `npm run package:win` | Package Electron for Windows |
+| `npm run package:mac` | Package Electron for macOS |
+| `npm run package:linux` | Package Electron for Linux |
+| `npm run dev:tauri` | Run Tauri app in development (requires Rust) |
+| `npm run build:tauri` | Build Tauri app for current platform (requires Rust) |
 | `npm test` | Run all tests |
 | `npm run clean` | Clean build artifacts |
 

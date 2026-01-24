@@ -37,3 +37,40 @@ export {
   roundMoney,
   parseDecimalInput,
 } from './money';
+
+// Functional programming utilities
+export {
+  Ok,
+  Err,
+  mapResult,
+  flatMapResult,
+  getOrElse,
+  pipe,
+  compose,
+  curry2,
+  curry3,
+  partial,
+  safeArrayAccess,
+  safeProp,
+  memoize,
+  identity,
+  constant,
+  tap,
+} from './functional';
+
+export type { Result } from './functional';
+
+// Invoice calculator utilities
+export {
+  calculateLineSubtotal,
+  calculateLineTax,
+  calculateLineTotal,
+  aggregateInvoiceTotals,
+  calculateDiscount,
+  applyDiscount,
+  formatMoney,
+  calculateTotalHours,
+  calculateAverageRate,
+  groupItemsByDescription,
+  mergeItemsByDescription,
+} from './calculator';

@@ -12,6 +12,8 @@
     "package:win": "npm run build:electron && npm run package:win --workspace=@invoice/electron",
     "package:mac": "npm run build:electron && npm run package:mac --workspace=@invoice/electron",
     "package:linux": "npm run build:electron && npm run package:linux --workspace=@invoice/electron",
+    "dev:tauri": "npm run build:shared && npm run build:api && npm run tauri:dev --workspace=@invoice/web",
+    "build:tauri": "npm run build:shared && npm run build:api && npm run build:web && npm run tauri:build --workspace=@invoice/web",
     "build:shared": "npm run build --workspace=@invoice/shared",
     "build:api": "npm run build --workspace=@invoice/api",
     "build:web": "npm run build --workspace=@invoice/web",

@@ -1,0 +1,25 @@
+{
+  "name": "@invoice/tauri",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "npm run build && cd ../web && npm run tauri dev",
+    "build": "tsc",
+    "tauri": "cd ../web && npm run tauri",
+    "tauri:dev": "cd ../web && npm run tauri dev",
+    "tauri:build": "npm run build && cd ../web && npm run tauri build"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.8.0",
+    "@invoice/api": "*",
+    "@invoice/shared": "*",
+    "@prisma/client": "^5.22.0",
+    "dotenv": "^17.2.3",
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  }
+}
