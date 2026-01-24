@@ -1,4 +1,4 @@
-use tauri::{command, AppHandle, Manager};
+use tauri::{command, Manager};
 use std::sync::Mutex;
 use std::process::Child;
 
@@ -13,6 +13,14 @@ fn get_api_url(state: tauri::State<Mutex<ApiServerState>>) -> String {
     format!("http://localhost:{}", server.port)
 }
 
+// Get API port from environment or use default
+fn get_api_port() -> u16 {
+    std::env::var("API_PORT")
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(3001)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -25,15 +33,17 @@ pub fn run() {
         )?;
       }
       
-      // Initialize API server state
+      // Initialize API server state with configurable port
       let api_state = ApiServerState {
-        port: 3001,
+        port: get_api_port(),
         process: None,
       };
       app.manage(Mutex::new(api_state));
       
-      // Note: In development, the API server should be started separately
-      // In production, we would start it here as a child process
+      // Note: The API server is expected to run as a separate process.
+      // In development: Start manually with `npm start` in packages/api
+      // In production: Can be bundled as a sidecar or started via system service
+      // This design keeps the Tauri app lightweight and allows for flexible deployment.
       
       Ok(())
     })

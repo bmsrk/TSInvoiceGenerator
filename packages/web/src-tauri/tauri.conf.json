@@ -23,14 +23,7 @@
       }
     ],
     "security": {
-      "csp": null,
-      "dangerousRemoteDomainIpcAccess": [
-        {
-          "domain": "localhost",
-          "windows": ["main"],
-          "enableTauriAPI": true
-        }
-      ]
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:3001; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
     }
   },
   "bundle": {
