@@ -1,10 +1,10 @@
-use tauri::{command, Manager};
-use std::process::Command as StdCommand;
+use tauri::{command, AppHandle, Manager};
 use std::sync::Mutex;
+use std::process::Child;
 
 struct ApiServerState {
     port: u16,
-    running: bool,
+    process: Option<Child>,
 }
 
 #[command]
@@ -28,9 +28,12 @@ pub fn run() {
       // Initialize API server state
       let api_state = ApiServerState {
         port: 3001,
-        running: false,
+        process: None,
       };
       app.manage(Mutex::new(api_state));
+      
+      // Note: In development, the API server should be started separately
+      // In production, we would start it here as a child process
       
       Ok(())
     })

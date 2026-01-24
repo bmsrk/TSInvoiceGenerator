@@ -50,6 +50,24 @@ This will:
 2. Build the API
 3. Start Electron with hot-reload
 
+#### Tauri Development
+
+Prerequisites: Rust toolchain (see [TAURI.md](./TAURI.md))
+
+```bash
+# Terminal 1: Start API server
+cd packages/api
+npm start
+
+# Terminal 2: Start Tauri app
+npm run dev:tauri
+```
+
+Or use the provided script:
+```bash
+npm run dev:tauri
+```
+
 ## Project Structure
 
 ```
@@ -234,6 +252,16 @@ npm run build:cli
 ```bash
 npm run build:electron
 ```
+
+### Build Tauri
+
+Prerequisites: Rust toolchain installed
+
+```bash
+npm run build:tauri
+```
+
+Output will be in `packages/web/src-tauri/target/release/bundle/`
 
 ## Package Management
 
