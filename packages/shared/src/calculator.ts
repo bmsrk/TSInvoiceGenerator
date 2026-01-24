@@ -55,7 +55,7 @@ export const aggregateInvoiceTotals = (
 ): InvoiceTotals => {
   const initial: InvoiceTotals = {
     subtotal: 0,
-    tax: 0,
+    totalTax: 0,
     total: 0,
   };
 
@@ -65,7 +65,7 @@ export const aggregateInvoiceTotals = (
 
     return {
       subtotal: roundMoney(addMoney(totals.subtotal, itemSubtotal)),
-      tax: roundMoney(addMoney(totals.tax, itemTax)),
+      totalTax: roundMoney(addMoney(totals.totalTax, itemTax)),
       total: roundMoney(addMoney(totals.total, addMoney(itemSubtotal, itemTax))),
     };
   }, initial);
@@ -90,12 +90,11 @@ export const applyDiscount = (
 ): InvoiceTotals => {
   const discount = calculateDiscount(totals.subtotal, discountPercentage);
   const newSubtotal = roundMoney(addMoney(totals.subtotal, -discount));
-  const newTax = calculateLineTax(newSubtotal, 0); // Recalculate if needed
   
   return {
     subtotal: newSubtotal,
-    tax: totals.tax, // Tax typically stays the same
-    total: roundMoney(addMoney(newSubtotal, totals.tax)),
+    totalTax: totals.totalTax, // Tax typically stays the same
+    total: roundMoney(addMoney(newSubtotal, totals.totalTax)),
   };
 };
 

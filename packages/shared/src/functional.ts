@@ -118,7 +118,7 @@ export const safeArrayAccess = <T>(
 /**
  * Safe object property access
  */
-export const safeProp = <T, K extends keyof T>(
+export const safeProp = <T extends object, K extends keyof T>(
   obj: T,
   key: K
 ): Result<T[K], string> => {

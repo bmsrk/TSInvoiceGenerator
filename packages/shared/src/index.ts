@@ -40,7 +40,6 @@ export {
 
 // Functional programming utilities
 export {
-  Result,
   Ok,
   Err,
   mapResult,
