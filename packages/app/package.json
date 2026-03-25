@@ -1,0 +1,16 @@
+{
+  "name": "@invoice/app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "electrobun dev --watch",
+    "build": "electrobun build --env stable",
+    "build:dev": "electrobun build --env dev"
+  },
+  "dependencies": {
+    "@invoice/api": "*",
+    "@invoice/shared": "*",
+    "electrobun": "^1.16.0",
+    "hono": "^4.0.0"
+  }
+}

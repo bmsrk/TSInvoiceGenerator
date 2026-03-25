@@ -1,0 +1,121 @@
+name: Build and Release with Electrobun
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  release:
+    types: [created]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            platform: linux
+          - os: macos-latest
+            platform: macos
+          - os: windows-latest
+            platform: windows
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
+
+      # Linux requires webkit2gtk for WebView support
+      - name: Install Linux WebView dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential cmake pkg-config \
+            libgtk-3-dev libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate --workspace=@invoice/api
+
+      - name: Build shared and API packages
+        run: |
+          npm run build:shared
+          npm run build:api
+
+      # The web frontend build is triggered by electrobun's preBuild script
+      # defined in packages/app/electrobun.config.ts (runs `npm run build:web`).
+      - name: Cache Electrobun CLI binaries
+        uses: actions/cache@v4
+        with:
+          path: |
+            packages/app/node_modules/electrobun/.cache
+          key: ${{ runner.os }}-electrobun-${{ hashFiles('packages/app/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electrobun-
+
+      - name: Build Electrobun app
+        run: |
+          cd packages/app
+          npx electrobun build --env stable
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: invoice-generator-${{ matrix.platform }}
+          path: packages/app/artifacts/**/*
+          if-no-files-found: warn
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            Download the Invoice Generator for your platform below.
+
+            | Platform | Format |
+            |----------|--------|
+            | **Windows** | Self-extracting `.exe` installer |
+            | **macOS** | `.dmg` disk image |
+            | **Linux** | Self-extracting `.sh` or AppImage |
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
