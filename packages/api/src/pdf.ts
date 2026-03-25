@@ -24,11 +24,14 @@ const fonts = {
 
 const printer = new PdfPrinter(fonts as any);
 
+type Margin4 = [number, number, number, number];
+
 function formatCurrency(amount: unknown, currency?: string): string {
   try {
     const num = Number(amount || 0);
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(num);
-  } catch {
+  } catch (err) {
+    console.warn('formatCurrency fallback:', err);
     return String(amount ?? '0');
   }
 }
@@ -52,8 +55,8 @@ export async function generateInvoicePdf(invoice: any): Promise<Buffer> {
   if (invoice.from?.logo) {
     try {
       headerLeft.push({ image: invoice.from.logo, width: 60, margin: [0, 0, 0, 8] });
-    } catch {
-      // Skip logo if invalid
+    } catch (err) {
+      console.warn('Failed to load company logo for PDF:', err);
     }
   }
   headerLeft.push(
@@ -201,7 +204,7 @@ export async function generateInvoicePdf(invoice: any): Promise<Buffer> {
       // Notes
       ...(invoice.notes
         ? [
-            { text: 'Notes', style: 'sectionLabel', margin: [0, 20, 0, 4] as [number, number, number, number] },
+            { text: 'Notes', style: 'sectionLabel', margin: [0, 20, 0, 4] as Margin4 },
             { text: invoice.notes, fontSize: 9, color: '#6b7280' } as Content,
           ]
         : []),
@@ -209,7 +212,7 @@ export async function generateInvoicePdf(invoice: any): Promise<Buffer> {
       // Terms & Conditions
       ...(invoice.termsAndConditions
         ? [
-            { text: 'Terms & Conditions', style: 'sectionLabel', margin: [0, 12, 0, 4] as [number, number, number, number] },
+            { text: 'Terms & Conditions', style: 'sectionLabel', margin: [0, 12, 0, 4] as Margin4 },
             { text: invoice.termsAndConditions, fontSize: 9, color: '#6b7280' } as Content,
           ]
         : []),

@@ -36,6 +36,8 @@ const emptyCompany: CreateCompanyInput = {
   isDefault: false,
 };
 
+const MAX_LOGO_SIZE_BYTES = 512 * 1024; // 512 KB
+
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,7 +125,7 @@ export default function CompaniesPage() {
   function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 512 * 1024) {
+    if (file.size > MAX_LOGO_SIZE_BYTES) {
       setError('Logo must be smaller than 512 KB');
       return;
     }
