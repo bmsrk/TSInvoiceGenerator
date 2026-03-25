@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock the prisma client used by services (module path includes .js in source)
-vi.mock('../db.js', () => ({
+vi.mock('../database.js', () => ({
   default: {
     company: {
       findMany: vi.fn(),
