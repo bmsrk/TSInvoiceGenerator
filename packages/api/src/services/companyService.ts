@@ -11,6 +11,7 @@ export interface CreateCompanyInput {
   zipCode: string;
   country: string;
   taxId?: string;
+  logo?: string;
   isDefault?: boolean;
 }
 
