@@ -36,10 +36,9 @@ vi.mock('../services/invoiceService.js', () => ({
 
 vi.mock('../services/seed.js', () => ({ seedDatabase: vi.fn() }));
 
-// Mock PDF generator so tests don't spawn binaries or download Chromium
+// Mock PDF generator so tests don't need actual font files
 vi.mock('../pdf.js', () => ({
-  htmlToPdf: vi.fn(async () => Buffer.from('%PDF-1.4 dummy')), 
-  renderInvoiceHtml: vi.fn((i) => `<html><body>invoice ${i.id}</body></html>`),
+  generateInvoicePdf: vi.fn(async () => Buffer.from('%PDF-1.4 dummy')),
 }));
 
 // Mock calculateInvoiceTotals from shared to keep results deterministic

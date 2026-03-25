@@ -15,6 +15,7 @@ export interface Company {
   zipCode: string;
   country: string;
   taxId?: string;
+  logo?: string;
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;
@@ -30,6 +31,7 @@ export interface CreateCompanyInput {
   zipCode: string;
   country: string;
   taxId?: string;
+  logo?: string;
   isDefault?: boolean;
 }
 

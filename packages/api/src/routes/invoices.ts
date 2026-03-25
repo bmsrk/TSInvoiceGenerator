@@ -6,7 +6,7 @@ import { Hono } from 'hono';
 import type { InvoiceStatus } from '@invoice/shared';
 import { calculateInvoiceTotals } from '@invoice/shared';
 import * as invoiceService from '../services/invoiceService.js';
-import { htmlToPdf, renderInvoiceHtml } from '../pdf.js';
+import { generateInvoicePdf } from '../pdf.js';
 
 export function createInvoiceRoutes(): Hono {
   const app = new Hono();
@@ -40,15 +40,12 @@ export function createInvoiceRoutes(): Hono {
 
     const apiInvoice = invoiceService.toApiFormat(invoice);
 
-    // Include totals so the template can show them if needed
+    // Include totals so the template can show them
     const totals = calculateInvoiceTotals(apiInvoice.items);
     const invoiceWithTotals = { ...apiInvoice, totals };
 
-    const html = renderInvoiceHtml(invoiceWithTotals as any);
-
     try {
-      const pdfBuffer = await htmlToPdf(html);
-      // Convert Buffer to Uint8Array for Response
+      const pdfBuffer = await generateInvoicePdf(invoiceWithTotals);
       const uint8Array = new Uint8Array(pdfBuffer);
       return new Response(uint8Array, { 
         status: 200,

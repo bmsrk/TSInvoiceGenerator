@@ -36,6 +36,8 @@ const emptyCompany: CreateCompanyInput = {
   isDefault: false,
 };
 
+const MAX_LOGO_SIZE_BYTES = 512 * 1024; // 512 KB
+
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,6 +82,7 @@ export default function CompaniesPage() {
       zipCode: company.zipCode,
       country: company.country,
       taxId: company.taxId || '',
+      logo: company.logo || '',
       isDefault: company.isDefault,
     });
     setError(null);
@@ -119,6 +122,20 @@ export default function CompaniesPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   }
 
+  function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_LOGO_SIZE_BYTES) {
+      setError('Logo must be smaller than 512 KB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      updateField('logo', reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
   return (
     <div>
       <div className="page-title-section">
@@ -153,17 +170,22 @@ export default function CompaniesPage() {
         <div className="card-list">
           {companies.map(company => (
             <div key={company.id} className="card-list-item">
-              <div className="card-list-content">
-                <div className="card-list-title">
-                  {company.name}
-                  {company.isDefault && (
-                    <span className="status-badge paid" style={{ marginLeft: '0.5rem' }}>Default</span>
-                  )}
-                </div>
-                <div className="card-list-subtitle">{company.email}</div>
-                <div className="card-list-meta">
-                  {company.city}, {company.state} {company.zipCode}
-                  {company.taxId && <span> • Tax ID: {company.taxId}</span>}
+              <div className="card-list-content" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {company.logo && (
+                  <img src={company.logo} alt="" style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: 'var(--radius-sm)', background: 'var(--card)' }} />
+                )}
+                <div>
+                  <div className="card-list-title">
+                    {company.name}
+                    {company.isDefault && (
+                      <span className="status-badge paid" style={{ marginLeft: '0.5rem' }}>Default</span>
+                    )}
+                  </div>
+                  <div className="card-list-subtitle">{company.email}</div>
+                  <div className="card-list-meta">
+                    {company.city}, {company.state} {company.zipCode}
+                    {company.taxId && <span> • Tax ID: {company.taxId}</span>}
+                  </div>
                 </div>
               </div>
               <div className="card-list-actions">
@@ -281,6 +303,25 @@ export default function CompaniesPage() {
                       onChange={e => updateField('country', e.target.value)}
                       required
                     />
+                  </div>
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label className="form-label">Company Logo</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      {formData.logo && (
+                        <img src={formData.logo} alt="Logo preview" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 'var(--radius-sm)', background: 'var(--card)' }} />
+                      )}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/svg+xml"
+                        onChange={handleLogoUpload}
+                        style={{ fontSize: '0.875rem' }}
+                      />
+                      {formData.logo && (
+                        <button type="button" className="btn btn-ghost" onClick={() => updateField('logo', '')} style={{ fontSize: '0.75rem' }}>
+                          Remove
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
                     <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

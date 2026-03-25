@@ -36,6 +36,7 @@ export type InvoiceWithRelations = Invoice & {
     zipCode: string;
     country: string;
     taxId: string | null;
+    logo: string | null;
   };
   customer: {
     id: string;
@@ -174,6 +175,7 @@ export function toApiFormat(invoice: InvoiceWithRelations) {
         country: invoice.company.country,
       },
       taxId: invoice.company.taxId || undefined,
+      logo: invoice.company.logo || undefined,
     },
     to: {
       name: invoice.customer.name,
