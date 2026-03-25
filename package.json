@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "npm run dev:tauri",
     "build": "npm run build:tauri",
-    "dev:cli": "cd cli && bun run index.ts",
-    "build:cli": "cd cli && bun build index.ts --compile --outfile invoice",
+    "dev:cli": "cd cli && bun run src/index.ts",
+    "build:cli": "cd cli && bun build src/index.ts --compile --outfile invoice",
     "dev:tauri": "npm run build:shared && npm run build:api && npm run tauri:dev --workspace=@invoice/web",
     "build:tauri": "npm run build:shared && npm run build:api && npm run build:web && npm run tauri:build --workspace=@invoice/web",
     "build:shared": "npm run build --workspace=@invoice/shared",

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../db.js', () => ({
+vi.mock('../database.js', () => ({
   default: {
     company: { count: vi.fn(), create: vi.fn(), createMany: vi.fn(), updateMany: vi.fn(), delete: vi.fn() },
     customer: { create: vi.fn() },
