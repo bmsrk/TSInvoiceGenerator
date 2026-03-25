@@ -10,10 +10,17 @@ const config: ElectrobunConfig = {
   build: {
     bun: {
       entrypoint: 'src/bun/index.ts',
+      // Keep the libsql native addon external so bun build doesn't try to
+      // inline it.  It is copied to node_modules/ in Resources (see below)
+      // so that Bun can resolve it at runtime.
+      external: ['libsql'],
     },
-    // Copy the Vite-built React frontend into the app bundle.
-    // The preBuild script ensures it is compiled first.
     copy: {
+      // libsql native addon — provides SQLite access for @libsql/client.
+      // With the Prisma driver adapter this replaces the heavy Prisma query
+      // engine binary, so only this one small native file is needed.
+      '../../node_modules/libsql': 'node_modules/libsql',
+      // Vite-built React SPA.  The preBuild script compiles it first.
       '../web/dist': 'web',
     },
     win: {
