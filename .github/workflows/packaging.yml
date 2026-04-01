@@ -5,6 +5,9 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   build-cli:
     name: Build CLI executables
@@ -17,37 +20,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Bun
-        run: |
-          curl -fsSL https://bun.sh/install | bash
-          echo "export BUN_INSTALL=\"$HOME/.bun\"" >> $GITHUB_ENV
-          echo "export PATH=\"$HOME/.bun/bin:$PATH\"" >> $GITHUB_ENV
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
 
-      - name: Run CLI build
+      - name: Install CLI dependencies
+        working-directory: cli
+        run: bun install
+
+      - name: Generate Prisma client
+        working-directory: cli
+        run: bunx prisma generate || true
+
+      - name: Build CLI executable
+        working-directory: cli
         shell: bash
         run: |
-          echo "Building CLI on $RUNNER_OS"
-          cd cli
-          bun install
-          bunx prisma generate || true
-          # Output file name includes OS tag
           case "$RUNNER_OS" in
-            "Linux") OUT="invoice-linux" ;;
-            "macOS") OUT="invoice-macos" ;;
+            "Linux")   OUT="invoice-linux" ;;
+            "macOS")   OUT="invoice-macos" ;;
             "Windows") OUT="invoice-win.exe" ;;
-            *) OUT="invoice" ;;
+            *)         OUT="invoice" ;;
           esac
-          bun build index.ts --compile --outfile $OUT || { echo "bun build failed"; exit 1; }
+          bun build src/index.ts --compile --outfile "$OUT"
 
       - name: Upload CLI artifact
         uses: actions/upload-artifact@v4
         with:
           name: cli-${{ matrix.os }}
-          path: |
-            cli/invoice*
+          path: cli/invoice*
 
-  package-electron:
-    name: Package Electron App
+  build-electron:
+    name: Build Electron App
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -57,27 +62,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      - name: Install repo dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate --workspace=@invoice/api
+
+      - name: Build shared, API, and web packages
         run: |
-          npm ci
-          cd packages/electron
-          npm ci
+          npm run build:shared
+          npm run build:api
+          npm run build:web
 
+      - name: Build Electron TypeScript
+        working-directory: packages/electron
+        run: npm run build
+
+      # wkhtmltopdf is an optional enhancement for PDF export. The app builds
+      # and runs without it; PDF export falls back to pdfmake if unavailable.
       - name: Prepare wkhtmltopdf binary
-        run: |
-          cd packages/electron
-          npm run prepare-wk || true
+        working-directory: packages/electron
+        run: npm run prepare-wk || true
 
-      - name: Build & package app
-        run: |
-          cd packages/electron
-          npm run build
-          npm run package || echo "electron-builder failed; check logs"
+      - name: Package Electron app
+        working-directory: packages/electron
+        run: npm run package || echo "electron-builder failed; check logs"
 
       - name: Upload packaged artifacts
         uses: actions/upload-artifact@v4

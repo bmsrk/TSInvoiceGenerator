@@ -64,14 +64,14 @@ jobs:
 
       # The web frontend build is triggered by electrobun's preBuild script
       # defined in packages/app/electrobun.config.ts (runs `npm run build:web`).
-      - name: Cache Electrobun CLI binaries
+      # Cache Electrobun core binaries (downloaded into root node_modules/electrobun/).
+      - name: Cache Electrobun core binaries
         uses: actions/cache@v4
         with:
-          path: |
-            packages/app/node_modules/electrobun/.cache
-          key: ${{ runner.os }}-electrobun-${{ hashFiles('packages/app/package.json') }}
+          path: node_modules/electrobun/dist-${{ matrix.platform }}-x64
+          key: ${{ runner.os }}-electrobun-core-${{ hashFiles('packages/app/package.json') }}
           restore-keys: |
-            ${{ runner.os }}-electrobun-
+            ${{ runner.os }}-electrobun-core-
 
       - name: Build Electrobun app
         run: |

@@ -1,6 +1,6 @@
 # Invoice Generator
 
-A modern, fully local/offline invoice generator built with **TypeScript + Tauri v2**. Lightweight (~10–15 MB), fast, and cross-platform.
+A modern, fully local/offline invoice generator built with **TypeScript + Electrobun**. Lightweight (~15 MB), fast, and cross-platform.
 
 ## ⬇️ Download
 
@@ -10,13 +10,13 @@ Pre-built binaries are available on the [Releases](../../releases) page:
 |----------|--------|
 | **Windows** | `.exe` (NSIS installer) |
 | **macOS** | `.dmg` |
-| **Linux** | `.AppImage` |
+| **Linux** | AppImage / `.sh` installer |
 
 ## 🚀 Quick Start (Development)
 
 **Prerequisites:**
 - [Node.js](https://nodejs.org/) v20+
-- [Rust](https://rustup.rs/) toolchain (for Tauri)
+- [Bun](https://bun.sh/) (for the Electrobun desktop app and TUI CLI)
 
 ```bash
 # Clone and install
@@ -24,7 +24,7 @@ git clone https://github.com/bmsrk/TSInvoiceGenerator.git
 cd TSInvoiceGenerator
 npm install
 
-# Run in development mode (defaults to Tauri)
+# Run in development mode (Electrobun desktop app)
 npm run dev
 
 # Build for your platform
@@ -40,12 +40,12 @@ cd cli
 bun install
 bunx prisma generate
 bunx prisma migrate dev --name init
-bun run index.ts
+bun run src/index.ts
 ```
 
 ## ✨ Features
 
-- **🖥️ Tauri v2 Desktop App** — Native performance, tiny footprint (~10–15 MB)
+- **🖥️ Electrobun Desktop App** — Native performance, tiny footprint (~15 MB)
 - **📦 100% Offline** — Embedded SQLite database, no internet required
 - **🖨️ PDF Export** — Pure TypeScript PDF generation (pdfmake, no native binaries)
 - **🏢 Company Branding** — Logo upload and persistence per company profile
@@ -62,8 +62,8 @@ ts-invoice-generator/
 ├── packages/
 │   ├── shared/          # Shared types, utilities, money calculations
 │   ├── api/             # Hono REST API + Prisma/SQLite + PDF generation
-│   └── web/             # React frontend + Tauri v2 wrapper
-│       └── src-tauri/   # Tauri Rust backend
+│   ├── web/             # React frontend (Vite)
+│   └── app/             # Electrobun desktop wrapper
 ├── cli/                 # Bun-based TUI CLI (standalone)
 └── package.json         # Workspace root
 ```
@@ -72,12 +72,14 @@ ts-invoice-generator/
 
 | Script | Description |
 |--------|-------------|
-| `npm run dev` | Run Tauri app in development (hot reload) |
-| `npm run build` | Build Tauri app for current platform |
-| `npm run dev:tauri` | Same as `npm run dev` |
-| `npm run build:tauri` | Same as `npm run build` |
+| `npm run dev` | Run Electrobun desktop app in development (hot reload) |
+| `npm run build` | Build Electrobun app for current platform |
+| `npm run dev:web` | Run React web frontend (Vite dev server) |
 | `npm run dev:cli` | Run TUI CLI (requires Bun) |
 | `npm run build:cli` | Build CLI standalone executable |
+| `npm run build:shared` | Compile shared package |
+| `npm run build:api` | Compile API package |
+| `npm run build:web` | Build React frontend |
 | `npm test` | Run all tests |
 | `npm run clean` | Clean build artifacts |
 
@@ -87,10 +89,14 @@ The embedded Hono API server provides:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/companies` | List / GET / POST / PUT / DELETE companies |
-| GET | `/api/customers` | List / GET / POST / PUT / DELETE customers |
-| GET | `/api/services` | List / GET / POST / PUT / DELETE services |
-| GET | `/api/invoices` | List / GET / POST / PATCH status / DELETE invoices |
+| GET/POST | `/api/companies` | List / create companies |
+| GET/PUT/DELETE | `/api/companies/:id` | Get / update / delete company |
+| GET/POST | `/api/customers` | List / create customers |
+| GET/PUT/DELETE | `/api/customers/:id` | Get / update / delete customer |
+| GET/POST | `/api/services` | List / create services |
+| GET/PUT/DELETE | `/api/services/:id` | Get / update / delete service |
+| GET/POST | `/api/invoices` | List / create invoices |
+| PATCH | `/api/invoices/:id/status` | Update invoice status |
 | GET | `/api/invoices/:id/pdf` | Export invoice as PDF |
 
 ## 🗄️ Database
@@ -99,12 +105,32 @@ SQLite with Prisma ORM — fully embedded, no server required.
 
 **Models:** Company (with logo), Customer, Service, Invoice, InvoiceLine
 
-## 🔄 CI/CD
+## 🔄 CI/CD — Creating a Release
 
-Automated releases via GitHub Actions (`.github/workflows/tauri-release.yml`):
-- Triggers on version tags (`v*.*.*`) or GitHub Release creation
-- Builds for Windows, macOS, and Linux using `tauri-apps/tauri-action`
-- Uploads binaries to GitHub Releases automatically
+Automated releases via GitHub Actions:
+
+### Desktop App (Electrobun) — `v*.*.*` tag
+Push a version tag to build Windows `.exe`, macOS `.dmg`, and Linux AppImage:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The `.github/workflows/electrobun-release.yml` workflow triggers, builds on all three platforms, and attaches the executables to a GitHub Release.
+
+### TUI CLI — `cli-v*.*.*` tag
+Push a CLI version tag to build standalone CLI binaries:
+
+```bash
+git tag cli-v1.0.0
+git push origin cli-v1.0.0
+```
+
+The `.github/workflows/release-cli.yml` workflow triggers and attaches CLI binaries to a separate GitHub Release.
+
+### Downloading Releases
+Go to the [Releases](../../releases) page and download the binary for your platform under **Assets**.
 
 ## 📄 License
 
